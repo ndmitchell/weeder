@@ -1,11 +1,12 @@
+{-# LANGUAGE TupleSections, RecordWildCards #-}
 
 module Main(main) where
 
 import Hi
-import Data.List
+import Cabal
+import Control.Monad
 import System.Directory.Extra
 import System.FilePath
-import qualified Data.HashSet as Set
 import System.Environment
 import Development.Shake.Command
 
@@ -19,8 +20,19 @@ weedDirectory dir = do
     dir <- canonicalizePath dir
     putStrLn $ "== Weeding " ++ dir ++ " =="
     distDir <- (dir </>) . takeWhile (/= '\n') . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
-    print distDir
-    dumpHis <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive distDir
+
+    let pickAndParse ext parse files = sequence [(x,) <$> parse x | x <- files, takeExtension x == ext]
+    his <- pickAndParse ".dump-hi" parseHi =<< listFilesRecursive distDir
+    cabals <- pickAndParse ".cabal" parseCabal =<< listFiles dir
+ 
+    -- first go looking for packages that are not used
+    forM_ cabals $ \(cabalFile, Cabal{..}) ->
+        forM_  cabalSections $ \CabalSection{..} -> do
+            -- find all Hi files that it is responsible for
+            return ()
+
+    print dir
+ {-
     his <- mapM parseHi dumpHis
     let hi = mconcat his
     let importPackage = Set.fromList $ hiImportPackage hi
@@ -31,3 +43,4 @@ weedDirectory dir = do
     putStr $ unlines $ filter (not . ignore) $ Set.toList $ exportIdent `Set.difference` importIdent
 
 explicitPackage = Set.fromList $ words "base process filepath directory containers unordered-containers yaml vector text bytestring transformers cpphs cmdargs haskell-src-exts uniplate ansi-terminal extra js-flot refact"
+-}

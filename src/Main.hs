@@ -4,6 +4,10 @@ module Main(main) where
 
 import Hi
 import Cabal
+import Util
+import Data.List.Extra
+import Data.Tuple.Extra
+import Data.Maybe
 import Control.Monad
 import System.Directory.Extra
 import System.FilePath
@@ -22,16 +26,27 @@ weedDirectory dir = do
     distDir <- (dir </>) . takeWhile (/= '\n') . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
 
     let pickAndParse ext parse files = sequence [(x,) <$> parse x | x <- files, takeExtension x == ext]
-    his <- pickAndParse ".dump-hi" parseHi =<< listFilesRecursive distDir
+    his <- fmap (map (first $ drop $ length distDir + 1)) $ pickAndParse ".dump-hi" parseHi =<< listFilesRecursive distDir
     cabals <- pickAndParse ".cabal" parseCabal =<< listFiles dir
  
     -- first go looking for packages that are not used
-    forM_ cabals $ \(cabalFile, Cabal{..}) ->
-        forM_  cabalSections $ \CabalSection{..} -> do
+    forM_ cabals $ \(cabalFile, cabal@Cabal{..}) ->
+        forM_  cabalSections $ \sect@CabalSection{..} -> do
             -- find all Hi files that it is responsible for
-            return ()
+            let files = [findHi his sect $ Right x | x <- delete ("Paths_" ++ cabalName) $ cabalExposedModules ++ cabalOtherModules] ++
+                        [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""]
+            let bad = cabalPackages \\ nubOrd (concatMap hiImportPackage files)
+            print ("Weed packages", cabalSectionLabel sect, bad)
 
-    print dir
+
+findHi :: [(FilePath, Hi)] -> CabalSection -> Either FilePath ModuleName -> Hi
+findHi files CabalSection{..} name = fromMaybe err $ firstJust (`lookup` files) poss
+    where
+        err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (map fst files, poss)
+        root = if null cabalSectionName then "build" else "build" </> cabalSectionName </> (cabalSectionName ++ "-tmp")
+        poss = [ normalise $ joinPath (root : x : either (pure . dropExtension) (splitOn ".") name) <.> "dump-hi"
+               | x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]
+
  {-
     his <- mapM parseHi dumpHis
     let hi = mconcat his

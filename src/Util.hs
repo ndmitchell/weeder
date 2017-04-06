@@ -1,10 +1,14 @@
 {-# LANGUAGE TupleSections #-}
 
-module Util(parseHanging, stripPrefixLower) where
+module Util(PackageName, ModuleName, parseHanging, stripPrefixLower) where
 
 import Data.Char
 import Data.List.Extra
 import Data.Tuple.Extra
+
+
+type PackageName = String
+type ModuleName = String
 
 
 parseHanging :: [String] -> [(String, [String])]

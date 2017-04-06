@@ -1,7 +1,8 @@
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ViewPatterns, RecordWildCards #-}
 
 module Cabal(
     Cabal(..), CabalSection(..), CabalSectionType(..),
+    cabalSectionLabel,
     parseCabal
     ) where
 
@@ -13,7 +14,7 @@ import Data.Monoid
 
 
 data Cabal = Cabal
-    {cabalName :: String
+    {cabalName :: PackageName
     ,cabalSections :: [CabalSection]
     } deriving Show
 
@@ -28,12 +29,15 @@ data CabalSectionType = Library | Executable | TestSuite deriving Show
 data CabalSection = CabalSection
     {cabalSectionType :: CabalSectionType
     ,cabalSectionName :: String
-    ,cabalMainIs :: String
-    ,cabalExposedModules :: [String]
-    ,cabalOtherModules :: [String]
-    ,cabalSourceDirs :: [String]
-    ,cabalPackages :: [String]
+    ,cabalMainIs :: FilePath
+    ,cabalExposedModules :: [ModuleName]
+    ,cabalOtherModules :: [ModuleName]
+    ,cabalSourceDirs :: [FilePath]
+    ,cabalPackages :: [PackageName]
     } deriving Show
+
+cabalSectionLabel :: CabalSection -> String
+cabalSectionLabel CabalSection{..} = show cabalSectionType ++ " " ++ cabalSectionName
 
 instance Monoid CabalSection where
     mempty = CabalSection Library "" "" [] [] [] []
@@ -67,4 +71,5 @@ parseSection typ name xs =
             "hs-source-dirs:" -> mempty{cabalSourceDirs=vs}
             "exposed-modules:" -> mempty{cabalExposedModules=vs}
             "other-modules:" -> mempty{cabalOtherModules=vs}
+            "main-is:" -> mempty{cabalMainIs=head $ vs ++ [""]}
             _ -> mempty

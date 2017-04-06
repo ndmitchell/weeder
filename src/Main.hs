@@ -8,12 +8,22 @@ import Data.Char
 import System.Directory.Extra
 import System.FilePath
 import qualified Data.HashSet as Set
+import System.Environment
+import Development.Shake.Command
 
-
+main :: IO ()
 main = do
-    files <- listFilesRecursive "C:/Neil/hlint/.stack-work/dist/ca59d0ab/build/src/"
-    files <- return $ filter ((==) ".dump-hi" . takeExtension) files
-    his <- mapM (fmap parseHI . readFile') files
+    args <- getArgs
+    mapM_ weedDirectory $ if null args then ["."] else args
+
+weedDirectory :: FilePath -> IO ()
+weedDirectory dir = do
+    dir <- canonicalizePath dir
+    putStrLn $ "== Weeding " ++ dir ++ " =="
+    distDir <- (dir </>) . takeWhile (/= '\n') . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
+    print distDir
+    dumpHis <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive distDir
+    his <- mapM (fmap parseHI . readFile') dumpHis
     let hi = mconcat his
     let importPackage = Set.fromList $ hiImportPackage hi
     let exportIdent = Set.fromList $ hiExportIdent hi

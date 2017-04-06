@@ -4,6 +4,7 @@ module Hi(Hi(..), parseHi) where
 import Data.List.Extra
 import Data.Tuple.Extra
 import Data.Char
+import System.IO.Extra
 
 
 data Hi = Hi
@@ -17,8 +18,10 @@ instance Monoid Hi where
     mempty = Hi [] [] [] []
     mappend (Hi x1 x2 x3 x4) (Hi y1 y2 y3 y4) = Hi (x1++y1) (x2++y2) (x3++y3) (x4++y4)
 
-parseHi :: String -> Hi
-parseHi = foldMap f . repeatedly (\(x:xs) -> first (x:) $ span (" " `isPrefixOf`) xs) .  lines
+parseHi :: String -> IO Hi
+parseHi file = parse <$> readFile' file
+
+parse = foldMap f . repeatedly (\(x:xs) -> first (x:) $ span (" " `isPrefixOf`) xs) .  lines
     where
         f (x:xs) | Just x <- stripPrefix "exports:" x = mempty{hiExportIdent=concatMap words $ x:xs}
         f (x:xs) | Just x <- stripPrefix "module dependencies:" x = mempty{hiImportModule=concatMap words $ x:xs}

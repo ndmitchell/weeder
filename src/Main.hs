@@ -2,7 +2,6 @@
 module Main(main) where
 
 import Hi
-import System.IO.Extra
 import Data.List
 import System.Directory.Extra
 import System.FilePath
@@ -22,7 +21,7 @@ weedDirectory dir = do
     distDir <- (dir </>) . takeWhile (/= '\n') . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
     print distDir
     dumpHis <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive distDir
-    his <- mapM (fmap parseHi . readFile') dumpHis
+    his <- mapM parseHi dumpHis
     let hi = mconcat his
     let importPackage = Set.fromList $ hiImportPackage hi
     let exportIdent = Set.fromList $ hiExportIdent hi

@@ -10,6 +10,7 @@ import Data.List.Extra
 import Data.Maybe
 import Control.Monad
 import qualified Data.HashMap.Strict as Map
+import qualified Data.HashSet as Set
 import System.Directory.Extra
 import System.FilePath
 import System.Environment
@@ -37,8 +38,10 @@ weedDirectory dir = do
         forM_  cabalSections $ \sect@CabalSection{..} -> do
             -- find all Hi files that it is responsible for
             let (external, internal) = findHis his sect
-            let bad = cabalPackages \\ nubOrd (concatMap hiImportPackage $ external ++ internal)
-            print ("Weed packages", cabalSectionLabel sect, bad)
+            let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
+            print ("Weed packages", cabalSectionLabel sect, Set.toList bad)
+
+    -- within a section, what is exported from an internal module, but not used in an external module
 
     -- next try and find exports that aren't used
     -- given a function, it is in one of N states:

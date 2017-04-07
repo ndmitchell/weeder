@@ -4,11 +4,12 @@ module Main(main) where
 
 import Hi
 import Cabal
+import Stack
 import Util
 import Data.List.Extra
-import Data.Tuple.Extra
 import Data.Maybe
 import Control.Monad
+import qualified Data.HashMap.Strict as Map
 import System.Directory.Extra
 import System.FilePath
 import System.Environment
@@ -21,28 +22,42 @@ main = do
 
 weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do
+    dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
     dir <- canonicalizePath dir
     putStrLn $ "== Weeding " ++ dir ++ " =="
-    distDir <- (dir </>) . takeWhile (/= '\n') . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
+    distDir <- (dir </>) . fst . line1 . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
 
-    let pickAndParse ext parse files = sequence [(x,) <$> parse x | x <- files, takeExtension x == ext]
-    his <- fmap (map (first $ drop $ length distDir + 1)) $ pickAndParse ".dump-hi" parseHi =<< listFilesRecursive distDir
-    cabals <- pickAndParse ".cabal" parseCabal =<< listFiles dir
+    Stack{..} <- parseStack $ dir </> "stack.yaml"
+    cabals <- forM stackPackages $ \x -> parseCabal =<< selectCabalFile (dir </> x)
+    his <- listFilesRecursive distDir
+    his <- fmap Map.fromList $ sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
  
     -- first go looking for packages that are not used
-    forM_ cabals $ \(cabalFile, cabal@Cabal{..}) ->
+    forM_ cabals $ \cabal@Cabal{..} ->
         forM_  cabalSections $ \sect@CabalSection{..} -> do
             -- find all Hi files that it is responsible for
-            let files = [findHi his sect $ Right x | x <- delete ("Paths_" ++ cabalName) $ cabalExposedModules ++ cabalOtherModules] ++
-                        [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""]
-            let bad = cabalPackages \\ nubOrd (concatMap hiImportPackage files)
+            let (external, internal) = findHis his sect
+            let bad = cabalPackages \\ nubOrd (concatMap hiImportPackage $ external ++ internal)
             print ("Weed packages", cabalSectionLabel sect, bad)
 
+    -- next try and find exports that aren't used
+    -- given a function, it is in one of N states:
+    -- not used, only in tests
 
-findHi :: [(FilePath, Hi)] -> CabalSection -> Either FilePath ModuleName -> Hi
-findHi files CabalSection{..} name = fromMaybe err $ firstJust (`lookup` files) poss
+
+-- (exposed, internal)
+findHis :: Map.HashMap FilePath Hi -> CabalSection -> ([Hi], [Hi])
+findHis his sect@CabalSection{..} = (external, internal)
     where
-        err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (map fst files, poss)
+        external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
+                   [findHi his sect $ Right x | x <- cabalExposedModules]
+        internal = [findHi his sect $ Right x | x <- filter (not . isPrefixOf "Paths_") cabalOtherModules]
+
+
+findHi :: Map.HashMap FilePath Hi -> CabalSection -> Either FilePath ModuleName -> Hi
+findHi his CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
+    where
+        err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
         root = if null cabalSectionName then "build" else "build" </> cabalSectionName </> (cabalSectionName ++ "-tmp")
         poss = [ normalise $ joinPath (root : x : either (pure . dropExtension) (splitOn ".") name) <.> "dump-hi"
                | x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]

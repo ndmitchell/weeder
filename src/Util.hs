@@ -1,6 +1,10 @@
 {-# LANGUAGE TupleSections #-}
 
-module Util(PackageName, ModuleName, parseHanging, stripPrefixLower) where
+module Util(
+    PackageName, ModuleName,
+    parseHanging, stripPrefixLower,
+    (?:)
+    ) where
 
 import Data.Char
 import Data.List.Extra
@@ -10,6 +14,9 @@ import Data.Tuple.Extra
 type PackageName = String
 type ModuleName = String
 
+
+(?:) :: (Eq a, Monoid a) => a -> a -> a
+a ?: b = if a == mempty then b else a
 
 parseHanging :: [String] -> [(String, [String])]
 parseHanging = repeatedly (\(x:xs) -> first (\a -> (x, unindent a)) $ span (\x -> null x || " " `isPrefixOf` x) xs)

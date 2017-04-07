@@ -3,26 +3,34 @@
 module Cabal(
     Cabal(..), CabalSection(..), CabalSectionType(..),
     cabalSectionLabel,
-    parseCabal
+    parseCabal,
+    selectCabalFile
     ) where
 
 import System.IO.Extra
+import System.Directory.Extra
+import System.FilePath
 import Util
 import Data.List.Extra
 import Data.Tuple.Extra
 import Data.Monoid
 
 
+selectCabalFile :: FilePath -> IO FilePath
+selectCabalFile dir = do
+    xs <- listFiles dir
+    case filter ((==) ".cabal" . takeExtension) xs of
+        [x] -> return x
+        _ -> fail $ "Didn't find exactly 1 cabal file in " ++ dir
+
 data Cabal = Cabal
     {cabalName :: PackageName
     ,cabalSections :: [CabalSection]
     } deriving Show
 
-a <?> b = if a == mempty then b else a
-
 instance Monoid Cabal where
     mempty = Cabal "" []
-    mappend (Cabal x1 x2) (Cabal y1 y2) = Cabal (x1 <?> y1) (x2++y2)
+    mappend (Cabal x1 x2) (Cabal y1 y2) = Cabal (x1?:y1) (x2++y2)
 
 data CabalSectionType = Library | Executable | TestSuite deriving Show
 
@@ -42,7 +50,7 @@ cabalSectionLabel CabalSection{..} = show cabalSectionType ++ " " ++ cabalSectio
 instance Monoid CabalSection where
     mempty = CabalSection Library "" "" [] [] [] []
     mappend (CabalSection x1 x2 x3 x4 x5 x6 x7) (CabalSection y1 y2 y3 y4 y5 y6 y7) =
-        CabalSection x1 (x2<?>y2) (x3<?>y3) (x4<>y4) (x5<>y5) (x6<>y6) (x7<>y7)
+        CabalSection x1 (x2?:y2) (x3?:y3) (x4<>y4) (x5<>y5) (x6<>y6) (x7<>y7)
 
 
 parseCabal :: FilePath -> IO Cabal

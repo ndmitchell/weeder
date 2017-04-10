@@ -6,8 +6,10 @@ module Util(
     ) where
 
 import Data.Char
+import Data.Monoid
 import Data.List.Extra
 import Data.Tuple.Extra
+import Prelude
 
 
 type PackageName = String

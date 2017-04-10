@@ -14,7 +14,8 @@ import qualified Data.HashSet as Set
 import System.Directory.Extra
 import System.FilePath
 import System.Environment
-import Development.Shake.Command
+import System.Process
+
 
 main :: IO ()
 main = do
@@ -25,7 +26,7 @@ weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do
     dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
     dir <- canonicalizePath dir
-    distDir <- (dir </>) . fst . line1 . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
+    distDir <- (dir </>) . fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir"]){cwd=Just dir} ""
 
     Stack{..} <- parseStack $ dir </> "stack.yaml"
     cabals <- forM stackPackages $ \x -> parseCabal =<< selectCabalFile (dir </> x)

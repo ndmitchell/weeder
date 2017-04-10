@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric, StandaloneDeriving #-}
 
 module Hi(Hi(..), Ident(..), parseHi) where
 
@@ -11,7 +11,8 @@ import Util
 import System.IO.Extra
 
 data Ident = Ident {identModule :: String, identName :: String}
-    deriving (Show,Eq,Generic,Hashable)
+    deriving (Show,Eq,Generic)
+instance Hashable Ident
 
 data Hi = Hi
     {hiModuleName :: String

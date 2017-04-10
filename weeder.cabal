@@ -1,0 +1,43 @@
+cabal-version:      >= 1.18
+build-type:         Simple
+name:               weeder
+version:            0.0
+license:            BSD3
+license-file:       LICENSE
+category:           Development
+author:             Neil Mitchell <ndmitchell@gmail.com>
+maintainer:         Neil Mitchell <ndmitchell@gmail.com>
+copyright:          Neil Mitchell 2017
+synopsis:           Detect dead code
+description:
+    Find redundant package dependencies or redundant module exports.
+homepage:           https://github.com/ndmitchell/weeder#readme
+bug-reports:        https://github.com/ndmitchell/weeder/issues
+extra-doc-files:
+    README.md
+    CHANGES.txt
+tested-with:        GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
+
+source-repository head
+    type:     git
+    location: https://github.com/ndmitchell/weeder.git
+
+executable weeder
+    default-language:   Haskell2010
+    main-is:            Main.hs
+    hs-source-dirs:     src
+    build-depends:
+        base == 4.*,
+        text,
+        unordered-containers,
+        yaml,
+        vector,
+        hashable,
+        filepath,
+        process,
+        extra
+    other-modules:
+        Cabal
+        Hi
+        Stack
+        Util

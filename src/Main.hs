@@ -8,6 +8,7 @@ import Stack
 import Util
 import Data.List.Extra
 import Data.Maybe
+import Data.Functor
 import Control.Monad
 import qualified Data.HashMap.Strict as Map
 import qualified Data.HashSet as Set
@@ -15,6 +16,7 @@ import System.Directory.Extra
 import System.FilePath
 import System.Environment
 import System.Process
+import Prelude
 
 
 main :: IO ()

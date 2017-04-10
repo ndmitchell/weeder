@@ -45,7 +45,7 @@ data CabalSection = CabalSection
     } deriving Show
 
 cabalSectionLabel :: CabalSection -> String
-cabalSectionLabel CabalSection{..} = show cabalSectionType ++ " " ++ cabalSectionName
+cabalSectionLabel CabalSection{..} = show cabalSectionType ++ [' ' | cabalSectionName /= ""] ++ cabalSectionName
 
 instance Monoid CabalSection where
     mempty = CabalSection Library "" "" [] [] [] []

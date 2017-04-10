@@ -25,7 +25,6 @@ weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do
     dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
     dir <- canonicalizePath dir
-    putStrLn $ "== Weeding " ++ dir ++ " =="
     distDir <- (dir </>) . fst . line1 . fromStdout <$> cmd (Cwd dir) "stack path --dist-dir"
 
     Stack{..} <- parseStack $ dir </> "stack.yaml"
@@ -35,10 +34,15 @@ weedDirectory dir = do
  
     forM_ cabals $ \cabal@Cabal{..} ->
         forM_  cabalSections $ \sect@CabalSection{..} -> do
+            putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
+
             -- first go looking for packages that are not used
             let (external, internal) = findHis his sect
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
-            print ("Weed packages", cabalSectionLabel sect, Set.toList bad)
+            if Set.null bad then
+                putStrLn "No weeds in the build-depends field"
+            else
+                putStr $ unlines $ "Redundant build-depends entries:" : map ("  "++) (Set.toList bad)
 
             -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
             let publicAPI = Set.unions $ map hiExportIdent external
@@ -46,8 +50,13 @@ weedDirectory dir = do
             -- if someone imports and exports something assume that isn't also a use (find some redundant warnings)
             let usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
             let bad = visibleInternals `Set.difference` Set.union publicAPI usedAnywhere
-            print ("Weed exports", cabalSectionLabel sect)
-            putStr $ unlines $ map show $ Set.toList bad
+            if Set.null bad then
+                putStrLn "No weeds in the module exports"
+            else
+                putStr $ unlines $ concat
+                    [ ("Weeds exported from " ++ m) : map ("  "++) is
+                    | (m, is) <- groupSort [(m,i) | Ident m i <- Set.toList bad]]
+            putStrLn ""
 
 
 -- (exposed, internal)

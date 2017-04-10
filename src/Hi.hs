@@ -7,8 +7,10 @@ import GHC.Generics
 import Data.Char
 import Data.Hashable
 import Data.List.Extra
+import Data.Monoid
 import Util
 import System.IO.Extra
+import Prelude
 
 data Ident = Ident {identModule :: String, identName :: String}
     deriving (Show,Eq,Generic)

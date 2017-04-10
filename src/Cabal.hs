@@ -13,7 +13,9 @@ import System.FilePath
 import Util
 import Data.List.Extra
 import Data.Tuple.Extra
+import Data.Foldable
 import Data.Monoid
+import Prelude
 
 
 selectCabalFile :: FilePath -> IO FilePath

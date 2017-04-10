@@ -33,19 +33,21 @@ weedDirectory dir = do
     his <- listFilesRecursive distDir
     his <- fmap Map.fromList $ sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
  
-    -- first go looking for packages that are not used
     forM_ cabals $ \cabal@Cabal{..} ->
         forM_  cabalSections $ \sect@CabalSection{..} -> do
-            -- find all Hi files that it is responsible for
+            -- first go looking for packages that are not used
             let (external, internal) = findHis his sect
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
             print ("Weed packages", cabalSectionLabel sect, Set.toList bad)
 
-    -- within a section, what is exported from an internal module, but not used in an external module
-
-    -- next try and find exports that aren't used
-    -- given a function, it is in one of N states:
-    -- not used, only in tests
+            -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
+            let publicAPI = Set.unions $ map hiExportIdent external
+            let visibleInternals = Set.unions [Set.filter ((==) hiModuleName . identModule) hiExportIdent | Hi{..} <- internal]
+            -- if someone imports and exports something assume that isn't also a use (find some redundant warnings)
+            let usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
+            let bad = visibleInternals `Set.difference` Set.union publicAPI usedAnywhere
+            print ("Weed exports", cabalSectionLabel sect)
+            putStr $ unlines $ map show $ Set.toList bad
 
 
 -- (exposed, internal)
@@ -64,16 +66,3 @@ findHi his CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) 
         root = if null cabalSectionName then "build" else "build" </> cabalSectionName </> (cabalSectionName ++ "-tmp")
         poss = [ normalise $ joinPath (root : x : either (pure . dropExtension) (splitOn ".") name) <.> "dump-hi"
                | x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]
-
- {-
-    his <- mapM parseHi dumpHis
-    let hi = mconcat his
-    let importPackage = Set.fromList $ hiImportPackage hi
-    let exportIdent = Set.fromList $ hiExportIdent hi
-    let importIdent = Set.fromList $ hiImportIdent hi
-    print $ explicitPackage `Set.difference` importPackage
-    let ignore x = "Language.Haskell.Exts." `isPrefixOf` x || '{' `elem` x || '}' `elem` x || '.' `notElem` x
-    putStr $ unlines $ filter (not . ignore) $ Set.toList $ exportIdent `Set.difference` importIdent
-
-explicitPackage = Set.fromList $ words "base process filepath directory containers unordered-containers yaml vector text bytestring transformers cpphs cmdargs haskell-src-exts uniplate ansi-terminal extra js-flot refact"
--}

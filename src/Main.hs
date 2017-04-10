@@ -31,7 +31,7 @@ weedDirectory dir = do
     Stack{..} <- parseStack $ dir </> "stack.yaml"
     cabals <- forM stackPackages $ \x -> parseCabal =<< selectCabalFile (dir </> x)
     his <- listFilesRecursive distDir
-    his <- fmap Map.fromList $ sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
+    his <- Map.fromList <$> sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
  
     forM_ cabals $ \cabal@Cabal{..} ->
         forM_  cabalSections $ \sect@CabalSection{..} -> do

@@ -35,7 +35,7 @@ parse fp = foldMap f . parseHanging .  lines
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
-                xs -> mempty{hiImportIdent = Set.fromList $ map (\y -> Ident (words x !! 1) $ fst (word1 y)) $ dropWhile ("exports:" `isPrefixOf`) xs}
+                xs -> mempty{hiImportIdent = Set.fromList $ map (Ident (words x !! 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | otherwise = mempty
 
         -- "old-locale-1.0.0.7@old-locale-1.0.0.7-KGBP1BSKxH5GCm0LnZP04j" -> "old-locale"

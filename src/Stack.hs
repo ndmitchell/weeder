@@ -8,7 +8,7 @@ import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
 import qualified Data.Vector as V
 
-data Stack = Stack {stackPackages :: [FilePath]}
+newtype Stack = Stack {stackPackages :: [FilePath]}
 
 parseStack :: FilePath -> IO Stack
 parseStack file = either throwIO (return . f) =<< decodeFileEither file

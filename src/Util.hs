@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 
 module Util(
     PackageName, ModuleName,

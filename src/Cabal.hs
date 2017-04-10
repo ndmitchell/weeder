@@ -13,7 +13,6 @@ import System.FilePath
 import Util
 import Data.List.Extra
 import Data.Tuple.Extra
-import Data.Foldable
 import Data.Monoid
 import Prelude
 
@@ -58,7 +57,7 @@ instance Monoid CabalSection where
 parseCabal :: FilePath -> IO Cabal
 parseCabal = fmap parseTop . readFile'
 
-parseTop = foldMap f . parseHanging . filter (not . isComment) . lines
+parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
     where
         isComment = isPrefixOf "--" . trimStart
         keyName = (lower *** fst . word1) . word1
@@ -72,7 +71,7 @@ parseTop = foldMap f . parseHanging . filter (not . isComment) . lines
 
 parseSection typ name xs =
     mempty{cabalSectionType=typ, cabalSectionName=name} <>
-    foldMap f (parseHanging xs)
+    mconcat (map f $ parseHanging xs)
     where
         keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, filter (not . null) $ map trim $ x2:xs)
 

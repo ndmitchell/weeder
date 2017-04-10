@@ -30,7 +30,7 @@ instance Monoid Hi where
 parseHi :: FilePath -> IO Hi
 parseHi fp = fmap (parse fp) . readFile' $ fp
 
-parse fp = foldMap f . parseHanging .  lines
+parse fp = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}

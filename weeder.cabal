@@ -34,7 +34,7 @@ executable weeder
         vector,
         hashable,
         filepath,
-        process,
+        process >= 1.2.3.0,
         extra
     other-modules:
         Cabal

@@ -75,6 +75,6 @@ findHi :: Map.HashMap FilePath Hi -> CabalSection -> Either FilePath ModuleName 
 findHi his CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
     where
         err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
-        poss = [ normalise $ joinPath (root : x : either (pure . dropExtension) (splitOn ".") name) <.> "dump-hi"
+        poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
                | root <- ["build" </> cabalSectionName </> (cabalSectionName ++ "-tmp") | cabalSectionName /= ""] ++ ["build"]
                , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]

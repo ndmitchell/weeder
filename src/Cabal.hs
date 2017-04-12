@@ -74,11 +74,12 @@ parseSection typ name xs =
     mconcat (map f $ parseHanging xs)
     where
         keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, filter (not . null) $ map trim $ x2:xs)
+        listModules = concatMap (wordsBy (`elem` " ,"))
 
         f (keyValues -> (k,vs)) = case k of
             "build-depends:" -> mempty{cabalPackages = map (trim . takeWhile (`notElem` "=><")) . splitOn "," $ unwords vs}
             "hs-source-dirs:" -> mempty{cabalSourceDirs=vs}
-            "exposed-modules:" -> mempty{cabalExposedModules=vs}
-            "other-modules:" -> mempty{cabalOtherModules=vs}
+            "exposed-modules:" -> mempty{cabalExposedModules=listModules vs}
+            "other-modules:" -> mempty{cabalOtherModules=listModules vs}
             "main-is:" -> mempty{cabalMainIs=head $ vs ++ [""]}
             _ -> mempty

@@ -5,3 +5,4 @@ import Library1
 
 main = exported `seq` print 1
 
+separate = ""

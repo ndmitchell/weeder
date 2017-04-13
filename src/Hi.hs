@@ -57,4 +57,4 @@ parse fp = mconcat . map f . parseHanging .  lines
             | isSymbol $ last x = let (a,b) = spanEnd isSymbol x
                                   in if null a then Ident "" b else Ident a $ tail b
             | otherwise = let (a,b) = breakOnEnd "." x
-                          in Ident (if null a then "" else init a) b 
+                          in Ident (if null a then "" else init a) b

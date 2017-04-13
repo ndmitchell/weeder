@@ -5,6 +5,8 @@ Redundant build-depends entries:
 Weeds exported from Dir.Everything
   Ctor2
   Type
+  d2
+  d4
   field1
   field2
   field3

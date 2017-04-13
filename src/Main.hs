@@ -33,11 +33,11 @@ main = do
 runTest :: IO ()
 runTest = do
     _ <- readCreateProcess (proc "stack" ["build"]){cwd=Just "test"} ""
-    let f = map trim . filter (/= "") . lines
+    let f = filter (/= "") . lines
     expect <- f <$> readFile' "test/output.txt"
     got <- fmap (f . fst) $ captureOutput $ weedDirectory "test"
     if expect == got then putStrLn "Test passed" else do
-        print (expect, got)
+        putStr $ unlines $ map ("- " ++) expect ++ map ("+ " ++) got
         exitFailure
 
 

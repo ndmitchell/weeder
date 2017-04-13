@@ -53,8 +53,8 @@ weedDirectory dir = do
                 putStr $ unlines $ "Redundant build-depends entries:" : map ("  "++) (Set.toList bad)
 
             -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
-            let publicAPI = Set.unions $ map hiExportIdent external
-            let visibleInternals = Set.unions [Set.filter ((==) hiModuleName . identModule) hiExportIdent | Hi{..} <- internal]
+            let publicAPI = Set.unions $ map hiExportIdentUnsupported external
+            let visibleInternals = Set.unions [Set.filter ((==) hiModuleName . identModule) $ hiExportIdentUnsupported hi | hi@Hi{..} <- internal]
             -- if someone imports and exports something assume that isn't also a use (find some redundant warnings)
             let usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
             let bad = visibleInternals `Set.difference` Set.union publicAPI usedAnywhere

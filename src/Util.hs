@@ -1,7 +1,7 @@
 
 module Util(
     PackageName, ModuleName,
-    parseHanging, stripPrefixLower,
+    parseHanging,
     (?:)
     ) where
 
@@ -21,13 +21,6 @@ a ?: b = if a == mempty then b else a
 
 parseHanging :: [String] -> [(String, [String])]
 parseHanging = repeatedly (\(x:xs) -> first (\a -> (x, unindent a)) $ span (\x -> null x || " " `isPrefixOf` x) xs)
-
-
-stripPrefixLower :: String -> String -> Maybe String
-stripPrefixLower a b
-    | lower a `isPrefixOf` lower b = Just $ drop (length a) b
-    | otherwise = Nothing
-
 
 unindent :: [String] -> [String]
 unindent xs = map (drop n) xs

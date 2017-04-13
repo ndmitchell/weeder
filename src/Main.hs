@@ -10,6 +10,8 @@ import Data.List.Extra
 import Data.Maybe
 import Data.Functor
 import Control.Monad
+import System.Exit
+import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
 import qualified Data.HashSet as Set
 import System.Directory.Extra
@@ -22,7 +24,22 @@ import Prelude
 main :: IO ()
 main = do
     args <- getArgs
-    mapM_ weedDirectory $ if null args then ["."] else args
+    if args == ["--test"] then
+        runTest
+    else
+        mapM_ weedDirectory $ if null args then ["."] else args
+
+
+runTest :: IO ()
+runTest = do
+    _ <- readCreateProcess (proc "stack" ["build"]){cwd=Just "test"} ""
+    let f = map trim . filter (/= "") . lines
+    expect <- f <$> readFile' "test/output.txt"
+    got <- fmap (f . fst) $ captureOutput $ weedDirectory "test"
+    if expect == got then putStrLn "Test passed" else do
+        print (expect, got)
+        exitFailure
+
 
 weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do

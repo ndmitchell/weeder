@@ -1,0 +1,21 @@
+== Weeding foo, Library ==
+Redundant build-depends entries:
+  cmdargs
+  process
+Weeds exported from Dir.Everything
+  Ctor2
+  Type
+  field1
+  field2
+  field3
+  unusedFunction
+  usedFunction2
+Weeds exported from Dir.Reexport
+  reexport3
+Weeds exported from Dir.Reuse
+  reused
+
+== Weeding foo, Executable foo ==
+Redundant build-depends entries:
+  process
+No weeds in the module exports

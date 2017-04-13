@@ -28,14 +28,19 @@ weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do
     dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
     dir <- canonicalizePath dir
-    distDir <- (dir </>) . fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir"]){cwd=Just dir} ""
+    -- the distDir is relative to each .cabal file directory
+    distSuffix <- fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir"]){cwd=Just dir} ""
 
     Stack{..} <- parseStack $ dir </> "stack.yaml"
-    cabals <- forM stackPackages $ \x -> parseCabal =<< selectCabalFile (dir </> x)
-    his <- listFilesRecursive distDir
-    his <- Map.fromList <$> sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
+    cabals <- forM stackPackages $ \x -> do
+        file <- selectCabalFile $ dir </> x
+        (file,) <$> parseCabal file
+
+    forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
+        let distDir = takeDirectory cabalFile </> distSuffix
+        his <- listFilesRecursive distDir
+        his <- Map.fromList <$> sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
  
-    forM_ cabals $ \cabal@Cabal{..} ->
         forM_  cabalSections $ \sect@CabalSection{..} -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
 

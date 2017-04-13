@@ -14,7 +14,8 @@ environment:
     STACK_ROOT: "c:\\sr"
 
 test_script:
-- stack init
+- stack init --ignore-subdirs
 - stack setup > nul
 - echo "" | stack --no-terminal build
 - stack exec -- weeder .
+- stack exec -- weeder --test

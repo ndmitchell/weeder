@@ -9,4 +9,4 @@ class MyClass1 a where myClass1 :: a
 class MyClass2 a where myClass2 :: a
 class MyClass3 a where myClass3 :: a
 
-foo _ = myClass2
+foo _ = (myClass2, classWithFunc)

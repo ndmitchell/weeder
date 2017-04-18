@@ -9,6 +9,9 @@ unusedFunction = 12 :: Int
 (=~=) a b = a == b -- used
 (==~==) a b = a == b
 
+class ClassWithFunc a where
+    classWithFunc :: a
+
 data D1 = D1 {d1 :: Int}
 data D2 = D2 {d2 :: Int}
 data D3 = D3 {d3 :: Int}

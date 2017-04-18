@@ -81,7 +81,9 @@ parse fp = mconcat . map f . parseHanging .  lines
         -- Return the identifiers and the fields. Fields are never qualified but everything else is.
         parseExports x = mempty
             {hiExportIdent = Set.fromList $ y : [Ident (a ?: identModule y) b | Ident a b <- ys]
-            ,hiFieldName = Set.fromList [Ident (identModule y) b | Ident "" b <- ys]}
+            ,hiFieldName = Set.fromList [Ident (identModule y) b | Ident "" b <- ys]
+            ,hiSignatures = Map.fromList [(b, Set.singleton y) | Ident _ b <- ys]
+            }
             where y:ys = map parseIdent $ wordsBy (`elem` "{} ") x
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"

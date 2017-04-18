@@ -58,9 +58,7 @@ parse fp = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
-            | Just x <- stripPrefix "exports:" x =
-                let (export,fields) = mconcat $ map parseExports xs
-                in mempty{hiExportIdent = Set.fromList export, hiFieldName = Set.fromList fields}
+            | Just x <- stripPrefix "exports:" x = mconcat $ map parseExports xs
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
@@ -80,9 +78,10 @@ parse fp = mconcat . map f . parseHanging .  lines
 
         -- "Apply.applyHintFile"
         -- "Language.Haskell.PPHsMode{Language.Haskell.PPHsMode caseIndent}
-        parseExports x =
-                (y : [Ident (a ?: identModule y) b | Ident a b <- ys]
-                ,[Ident (identModule y) b | Ident "" b <- ys])
+        -- Return the identifiers and the fields. Fields are never qualified but everything else is.
+        parseExports x = mempty
+            {hiExportIdent = Set.fromList $ y : [Ident (a ?: identModule y) b | Ident a b <- ys]
+            ,hiFieldName = Set.fromList [Ident (identModule y) b | Ident "" b <- ys]}
             where y:ys = map parseIdent $ wordsBy (`elem` "{} ") x
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"

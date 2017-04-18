@@ -34,10 +34,17 @@ runTest :: IO ()
 runTest = do
     _ <- readCreateProcess (proc "stack" ["build"]){cwd=Just "test"} ""
     let f = filter (/= "") . lines
-    expect <- f <$> readFile' "test/output.txt"
-    got <- fmap (f . fst) $ captureOutput $ weedDirectory "test"
-    if expect == got then putStrLn "Test passed" else do
-        putStr $ unlines $ map ("- " ++) expect ++ map ("+ " ++) got
+    expect <- readFile' "test/output.txt"
+    got <- fmap fst $ captureOutput $ weedDirectory "test"
+    if f expect == f got then putStrLn "Test passed" else do
+        diff <- findExecutable "diff"
+        if isNothing diff then
+            putStr $ unlines $ map ("- " ++) (lines expect) ++ map ("+ " ++) (lines got)
+         else do
+            withTempDir $ \dir -> do
+                writeFile (dir </> "old.txt") expect
+                writeFile (dir </> "new.txt") got
+                callProcess "diff" ["-u3",dir </> "old.txt", dir </> "new.txt"]
         exitFailure
 
 

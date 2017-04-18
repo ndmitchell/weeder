@@ -47,6 +47,7 @@ runTest = do
                 callProcess "diff" ["-u3",dir </> "old.txt", dir </> "new.txt"]
         exitFailure
 
+listLines = map ("  "++) . sort
 
 weedDirectory :: FilePath -> IO ()
 weedDirectory dir = do
@@ -74,7 +75,7 @@ weedDirectory dir = do
             if Set.null bad then
                 putStrLn "No weeds in the build-depends field"
             else
-                putStr $ unlines $ "Redundant build-depends entries:" : map ("  "++) (sort $ Set.toList bad)
+                putStr $ unlines $ "Redundant build-depends entries:" : listLines (Set.toList bad)
 
             -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
             let publicAPI = Set.unions $ map hiExportIdentUnsupported external
@@ -86,7 +87,7 @@ weedDirectory dir = do
                 putStrLn "No weeds in the module exports"
             else
                 putStr $ unlines $ concat
-                    [ ("Weeds exported from " ++ m) : map ("  "++) (sort is)
+                    [ ("Weeds exported from " ++ m) : listLines is
                     | (m, is) <- groupSort [(m,i) | Ident m i <- Set.toList bad]]
             putStrLn ""
 

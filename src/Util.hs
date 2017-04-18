@@ -3,13 +3,16 @@ module Util(
     PackageName, ModuleName,
     parseHanging,
     (?:),
-    isHaskellSymbol
+    isHaskellSymbol,
+    reachable
     ) where
 
 import Data.Char
 import Data.Monoid
+import Data.Hashable
 import Data.List.Extra
 import Data.Tuple.Extra
+import qualified Data.HashSet as Set
 import Prelude
 
 
@@ -38,3 +41,13 @@ isHaskellSymbol :: Char -> Bool
 isHaskellSymbol x =
     x `elem` "!#$%&*+./<=>?@\\^|-~" ||
     (isSymbol x && x `notElem` "\"'_(),;[]`{}")
+
+
+-- | Given a list of mappings, and an initial set, find which items can be reached
+reachable :: (Eq k, Hashable k) => (k -> [k]) -> [k] -> Set.HashSet k
+reachable follow = f Set.empty
+    where
+        f done [] = done
+        f done (x:xs)
+            | x `Set.member` done = f done xs
+            | otherwise = f (Set.insert x done) $ follow x ++ xs

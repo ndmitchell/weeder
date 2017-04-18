@@ -13,6 +13,7 @@ library
     other-modules:
         Dir.Everything
         Dir.Reexport
+        Dir.Unused
         Dir.Reuse
 
 executable foo

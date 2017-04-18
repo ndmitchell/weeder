@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, StandaloneDeriving, RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric, RecordWildCards #-}
 
 module Hi(
     Hi(..), Ident(..),

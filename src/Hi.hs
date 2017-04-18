@@ -23,10 +23,15 @@ instance Hashable Ident
 
 data Hi = Hi
     {hiModuleName :: String
+        -- ^ Module name
     ,hiImportPackage :: Set.HashSet PackageName
+        -- ^ Packages imported by this module
     ,hiExportIdent :: Set.HashSet Ident
+        -- ^ Identifiers exported by this module
     ,hiImportIdent :: Set.HashSet Ident
+        -- ^ Identifiers used by this module
     ,hiSignatures :: Map.HashMap String (Set.HashSet Ident)
+        -- ^ Type signatures of functions defined in this module and the types they refer to
     } deriving Show
 
 instance Monoid Hi where

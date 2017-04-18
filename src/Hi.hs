@@ -32,15 +32,22 @@ data Hi = Hi
         -- ^ Identifiers used by this module
     ,hiSignatures :: Map.HashMap String (Set.HashSet Ident)
         -- ^ Type signatures of functions defined in this module and the types they refer to
+    ,hiFieldName :: Set.HashSet Ident
+        -- ^ Things that are field names
     } deriving Show
 
 instance Monoid Hi where
-    mempty = Hi "" Set.empty Set.empty Set.empty Map.empty
-    mappend (Hi x1 x2 x3 x4 x5) (Hi y1 y2 y3 y4 y5) =
+    mempty = Hi "" Set.empty Set.empty Set.empty Map.empty Set.empty
+    mappend (Hi x1 x2 x3 x4 x5 x6) (Hi y1 y2 y3 y4 y5 y6) =
         Hi (x1 ?: y1) (Set.union x2 y2) (Set.union x3 y3) (Set.union x4 y4) (Map.unionWith Set.union x5 y5)
+           (Set.union x6 y6)
 
+-- | Things that are exported and aren't of use if they aren't used. Don't worry about:
+--
+-- * Types that are exported and used in a definition that is exported.
+-- * Field selectors that aren't used but where the constructor is used (handy documentation).
 hiExportIdentUnsupported :: Hi -> Set.HashSet Ident
-hiExportIdentUnsupported Hi{..} = hiExportIdent `Set.difference` supported
+hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Set.difference` hiFieldName
     where supported = Set.unions [v | (k,v) <- Map.toList hiSignatures, k `Set.member` names]
           names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
@@ -51,7 +58,9 @@ parse fp = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
-            | Just x <- stripPrefix "exports:" x = mempty{hiExportIdent = Set.fromList $ concatMap parseExports xs}
+            | Just x <- stripPrefix "exports:" x =
+                let (export,fields) = mconcat $ map parseExports xs
+                in mempty{hiExportIdent = Set.fromList export, hiFieldName = Set.fromList fields}
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
@@ -71,7 +80,9 @@ parse fp = mconcat . map f . parseHanging .  lines
 
         -- "Apply.applyHintFile"
         -- "Language.Haskell.PPHsMode{Language.Haskell.PPHsMode caseIndent}
-        parseExports x = y : [Ident (a ?: identModule y) b | Ident a b <- ys]
+        parseExports x =
+                (y : [Ident (a ?: identModule y) b | Ident a b <- ys]
+                ,[Ident (identModule y) b | Ident "" b <- ys])
             where y:ys = map parseIdent $ wordsBy (`elem` "{} ") x
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"

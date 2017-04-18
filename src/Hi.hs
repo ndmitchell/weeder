@@ -37,10 +37,10 @@ data Hi = Hi
     } deriving Show
 
 instance Monoid Hi where
-    mempty = Hi "" Set.empty Set.empty Set.empty Map.empty Set.empty
+    mempty = Hi "" mempty mempty mempty mempty mempty
     mappend (Hi x1 x2 x3 x4 x5 x6) (Hi y1 y2 y3 y4 y5 y6) =
-        Hi (x1 ?: y1) (Set.union x2 y2) (Set.union x3 y3) (Set.union x4 y4) (Map.unionWith Set.union x5 y5)
-           (Set.union x6 y6)
+        Hi (x1 ?: y1) (x2 <> y2) (x3 <> y3) (x4 <> y4)
+            (Map.unionWith (<>) x5 y5) (x6 <> y6)
 
 -- | Things that are exported and aren't of use if they aren't used. Don't worry about:
 --

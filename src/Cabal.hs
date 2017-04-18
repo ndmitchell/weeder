@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns, RecordWildCards #-}
 
 module Cabal(
-    Cabal(..), CabalSection(..), CabalSectionType(..),
+    Cabal(..), CabalSection(..), CabalSectionType,
     cabalSectionLabel,
     parseCabal,
     selectCabalFile

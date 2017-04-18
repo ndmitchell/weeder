@@ -98,8 +98,9 @@ findHis his sect@CabalSection{..} = (external, internal)
     where
         external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
                    [findHi his sect $ Right x | x <- cabalExposedModules]
-        internal = [findHi his sect $ Right x | x <- filter (not . isPrefixOf "Paths_") cabalOtherModules]
+        internal = [findHi his sect $ Right x | x <- filter (not . isPaths) cabalOtherModules]
 
+isPaths = isPrefixOf "Paths_"
 
 findHi :: Map.HashMap FilePath Hi -> CabalSection -> Either FilePath ModuleName -> Hi
 findHi his CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss

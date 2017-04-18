@@ -24,21 +24,24 @@ import Prelude
 main :: IO ()
 main = do
     args <- getArgs
-    if args == ["--test"] then
-        runTest
+    if "--test" `elem` args then
+        runTest ("--update" `elem` args)
     else
         mapM_ weedDirectory $ if null args then ["."] else args
 
 
-runTest :: IO ()
-runTest = do
+runTest :: Bool -> IO ()
+runTest update = do
     _ <- readCreateProcess (proc "stack" ["build"]){cwd=Just "test"} ""
     let f = filter (/= "") . lines
     expect <- readFile' "test/output.txt"
     got <- fmap fst $ captureOutput $ weedDirectory "test"
     if f expect == f got then putStrLn "Test passed" else do
         diff <- findExecutable "diff"
-        if isNothing diff then
+        if update then do
+            writeFileBinary "test/output.txt" got
+            putStrLn "UPDATED output.txt due to --update"
+         else if isNothing diff then
             putStr $ unlines $ map ("- " ++) (lines expect) ++ map ("+ " ++) (lines got)
          else
             withTempDir $ \dir -> do

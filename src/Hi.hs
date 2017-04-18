@@ -71,11 +71,12 @@ parse fp = mconcat . map f . parseHanging .  lines
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"
         parseIdent x
-            | isSymbol $ last x = let (a,b) = spanEnd isSymbol x
-                                  in if null a then Ident "" b else Ident a $ tail b
-            | otherwise = let (a,b) = breakOnEnd "." x
-                          in Ident (if null a then "" else init a) b
-
+            | isHaskellSymbol $ last x =
+                let (a,b) = spanEnd isHaskellSymbol x
+                in if null a then Ident "" b else Ident a $ tail b
+            | otherwise =
+                let (a,b) = breakOnEnd "." x
+                in Ident (if null a then "" else init a) b
 
 unbracket :: String -> String
 unbracket ('(':x) | Just x <- stripSuffix ")" x = x

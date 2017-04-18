@@ -2,7 +2,8 @@
 module Util(
     PackageName, ModuleName,
     parseHanging,
-    (?:)
+    (?:),
+    isHaskellSymbol
     ) where
 
 import Data.Char
@@ -28,3 +29,8 @@ unindent xs = map (drop n) xs
         n = minimum $ top : map f xs
         f x = let (a,b) = span isSpace x in if null b then top else length a
         top = 1000
+
+isHaskellSymbol :: Char -> Bool
+isHaskellSymbol x =
+    x `elem` "!#$%&*+./<=>?@\\^|-~" ||
+    (isSymbol x && x `notElem` "\"'_(),;[]`{}")

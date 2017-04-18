@@ -68,9 +68,9 @@ weedDirectory dir = do
  
         forM_  cabalSections $ \sect@CabalSection{..} -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
+            let (external, internal) = findHis his sect
 
             -- first go looking for packages that are not used
-            let (external, internal) = findHis his sect
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
             if Set.null bad then
                 putStrLn "No weeds in the build-depends field"

@@ -77,6 +77,22 @@ weedDirectory dir = do
             else
                 putStr $ unlines $ "Redundant build-depends entries:" : listLines (Set.toList bad)
 
+            -- now look for modules which are imported but not in the other-modules list
+            let imports = Map.fromList [(hiModuleName, Set.map identModule hiImportIdent) | Hi{..} <- external ++ internal]
+            let missing = Set.filter (not . isPaths) $
+                          Set.unions (Map.elems imports) `Set.difference`
+                          Set.fromList (Map.keys imports)
+            let excessive = Set.fromList (map hiModuleName internal) `Set.difference`
+                            reachable (\k -> maybe [] Set.toList $ Map.lookup k imports) (map hiModuleName external)
+            if Set.null missing && Set.null excessive then
+                putStrLn "No weeds in the other-modules field"
+            else do
+                unless (Set.null missing) $
+                    putStr $ unlines $ "Missing other-modules entries:" : listLines (Set.toList missing)
+                unless (Set.null excessive) $
+                    putStr $ unlines $ "Excessive other-modules entries:" : listLines (Set.toList excessive)
+
+
             -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
             let publicAPI = Set.unions $ map hiExportIdentUnsupported external
             let visibleInternals = Set.unions [Set.filter ((==) hiModuleName . identModule) $ hiExportIdentUnsupported hi | hi@Hi{..} <- internal]

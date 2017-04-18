@@ -40,7 +40,7 @@ runTest = do
         diff <- findExecutable "diff"
         if isNothing diff then
             putStr $ unlines $ map ("- " ++) (lines expect) ++ map ("+ " ++) (lines got)
-         else do
+         else
             withTempDir $ \dir -> do
                 writeFile (dir </> "old.txt") expect
                 writeFile (dir </> "new.txt") got

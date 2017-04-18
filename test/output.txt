@@ -3,6 +3,7 @@ Redundant build-depends entries:
   cmdargs
   process
 Weeds exported from Dir.Everything
+  ==~==
   Ctor2
   Type
   d2

@@ -1,5 +1,5 @@
 
-module Dir.Library2(usedFunction1, reexport1, bob, MyClass3(..), myClass1, foo) where
+module Dir.Library2(usedFunction1, reexport1, bob, MyClass3(..), myClass1, foo, (=~=)) where
 
 import Dir.Reexport
 

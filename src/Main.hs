@@ -99,7 +99,7 @@ weedDirectory dir = do
                 | (pkgs, mods) <- reused]
         putStrLn ""
 
-        forM_  cabalSections $ \(sect@CabalSection{..}, (external, internal)) -> do
+        forM_ cabalSections $ \(sect@CabalSection{..}, (external, internal)) -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
 
             -- first go looking for packages that are not used

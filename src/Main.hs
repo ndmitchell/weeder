@@ -71,7 +71,8 @@ weedDirectory dir = do
     errCount <- newIORef 0
     let reportErrors xs = do
             modifyIORef errCount (+ length (filter (" " `isPrefixOf`) xs))
-            hPutStr stderr $ unlines xs
+            -- I tried stderr, but the output gets interleaved
+            putStr $ unlines xs
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         let distDir = takeDirectory cabalFile </> distSuffix

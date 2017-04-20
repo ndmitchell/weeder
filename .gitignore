@@ -3,3 +3,6 @@
 .stack-work/
 /issues/
 stack.yaml
+
+# generated from package.yaml
+test/bar/bar.cabal

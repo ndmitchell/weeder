@@ -26,3 +26,15 @@ Redundant build-depends entries:
 No weeds in the other-modules field
 No weeds in the module exports
 
+== Weeding bar, Library ==
+No weeds in the build-depends field
+No weeds in the other-modules field
+Weeds exported from Internal
+  internalMain
+
+== Weeding bar, Executable bar ==
+No weeds in the build-depends field
+No weeds in the other-modules field
+Weeds exported from Internal
+  internalDirect
+

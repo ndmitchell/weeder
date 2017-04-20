@@ -1,0 +1,11 @@
+name: bar
+dependencies: base
+
+library:
+    exposed-modules: [Library]
+    other-modules: [Internal]
+
+executables:
+    bar:
+        main: Main
+        other-modules: [Library,Internal]

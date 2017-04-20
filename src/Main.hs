@@ -9,6 +9,7 @@ import Util
 import Data.List.Extra
 import Data.Maybe
 import Data.Functor
+import Data.IORef
 import Control.Monad
 import System.Exit
 import System.IO.Extra
@@ -26,8 +27,10 @@ main = do
     args <- getArgs
     if "--test" `elem` args then
         runTest ("--update" `elem` args)
-    else
-        mapM_ weedDirectory $ if null args then ["."] else args
+    else do
+        -- FIXME: Should return an exit code if there are hints 
+        errs <- fmap sum $ mapM weedDirectory $ if null args then ["."] else args
+        when (errs > 0) exitFailure
 
 
 runTest :: Bool -> IO ()
@@ -52,7 +55,7 @@ runTest update = do
 
 listLines = map ("  "++) . sort
 
-weedDirectory :: FilePath -> IO ()
+weedDirectory :: FilePath -> IO Int
 weedDirectory dir = do
     dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
     dir <- canonicalizePath dir
@@ -63,6 +66,12 @@ weedDirectory dir = do
     cabals <- forM stackPackages $ \x -> do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file
+
+    -- put it in an IORef so harder to "lose" error reports
+    errCount <- newIORef 0
+    let reportErrors xs = do
+            modifyIORef errCount (+ length (filter (" " `isPrefixOf`) xs))
+            hPutStr stderr $ unlines xs
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         let distDir = takeDirectory cabalFile </> distSuffix
@@ -78,7 +87,7 @@ weedDirectory dir = do
             if Set.null bad then
                 putStrLn "No weeds in the build-depends field"
             else
-                putStr $ unlines $ "Redundant build-depends entries:" : listLines (Set.toList bad)
+                reportErrors $ "Redundant build-depends entries:" : listLines (Set.toList bad)
 
             -- now look for modules which are imported but not in the other-modules list
             let imports = Map.fromList [(hiModuleName, Set.map identModule hiImportIdent) | Hi{..} <- external ++ internal]
@@ -91,9 +100,9 @@ weedDirectory dir = do
                 putStrLn "No weeds in the other-modules field"
             else do
                 unless (Set.null missing) $
-                    putStr $ unlines $ "Missing other-modules entries:" : listLines (Set.toList missing)
+                    reportErrors $ "Missing other-modules entries:" : listLines (Set.toList missing)
                 unless (Set.null excessive) $
-                    putStr $ unlines $ "Excessive other-modules entries:" : listLines (Set.toList excessive)
+                    reportErrors $ "Excessive other-modules entries:" : listLines (Set.toList excessive)
 
 
             -- now see which things are defined in and exported out of the internals, but not used elsewhere or external
@@ -105,10 +114,12 @@ weedDirectory dir = do
             if Set.null bad then
                 putStrLn "No weeds in the module exports"
             else
-                putStr $ unlines $ concat
+                reportErrors $ concat
                     [ ("Weeds exported from " ++ m) : listLines is
                     | (m, is) <- groupSort [(m,i) | Ident m i <- Set.toList bad]]
             putStrLn ""
+
+    readIORef errCount
 
 
 -- (exposed, internal)

@@ -10,6 +10,7 @@ import Data.List.Extra
 import Data.Maybe
 import Data.Functor
 import Data.IORef
+import Data.Tuple.Extra
 import Control.Monad
 import System.Exit
 import System.IO.Extra
@@ -78,10 +79,28 @@ weedDirectory dir = do
         let distDir = takeDirectory cabalFile </> distSuffix
         his <- listFilesRecursive distDir
         his <- Map.fromList <$> sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
- 
-        forM_  cabalSections $ \sect@CabalSection{..} -> do
+
+        putStrLn $ "= Weeding " ++ cabalName ++ " ="
+        cabalSections <- return $ map (id &&& findHis his) cabalSections
+
+        -- detect files used in more than one group
+        let reused =
+                groupSort $
+                map (\xs -> (map fst3 xs, snd3 $ head xs)) $
+                filter ((> 1) . length) $
+                map (nubOrdOn thd3) $
+                Map.elems $
+                Map.fromListWith (++) [(x{hiFileName=""}, [(cabalSectionLabel sect, hiModuleName x, hiFileName x)]) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
+        if null reused then
+            putStrLn "No modules reused between components"
+        else
+            reportErrors $ concat
+                [ ("Reused between " ++ intercalate ", " pkgs) : listLines mods
+                | (pkgs, mods) <- reused]
+        putStrLn ""
+
+        forM_  cabalSections $ \(sect@CabalSection{..}, (external, internal)) -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
-            let (external, internal) = findHis his sect
 
             -- first go looking for packages that are not used
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)

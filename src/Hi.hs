@@ -13,6 +13,7 @@ import Data.Char
 import Data.Hashable
 import Data.List.Extra
 import Data.Monoid
+import Data.Functor
 import Util
 import System.IO.Extra
 import Prelude

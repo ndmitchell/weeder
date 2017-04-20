@@ -18,11 +18,13 @@ import System.IO.Extra
 import Prelude
 
 data Ident = Ident {identModule :: String, identName :: String}
-    deriving (Show,Eq,Generic)
+    deriving (Show,Eq,Ord,Generic)
 instance Hashable Ident
 
 data Hi = Hi
-    {hiModuleName :: String
+    {hiFileName :: FilePath
+        -- ^ File the Hi file was read from
+    ,hiModuleName :: String
         -- ^ Module name
     ,hiImportPackage :: Set.HashSet PackageName
         -- ^ Packages imported by this module
@@ -34,13 +36,14 @@ data Hi = Hi
         -- ^ Type signatures of functions defined in this module and the types they refer to
     ,hiFieldName :: Set.HashSet Ident
         -- ^ Things that are field names
-    } deriving Show
+    } deriving (Show,Eq,Generic)
+instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi "" mempty mempty mempty mempty mempty
-    mappend (Hi x1 x2 x3 x4 x5 x6) (Hi y1 y2 y3 y4 y5 y6) =
-        Hi (x1 ?: y1) (x2 <> y2) (x3 <> y3) (x4 <> y4)
-            (Map.unionWith (<>) x5 y5) (x6 <> y6)
+    mempty = Hi "" "" mempty mempty mempty mempty mempty
+    mappend (Hi x1 x2 x3 x4 x5 x6 x7) (Hi y1 y2 y3 y4 y5 y6 y7) =
+        Hi (x1 ?: y1) (x2 ?: y2) (x3 <> y3) (x4 <> y4) (x5 <> y5)
+            (Map.unionWith (<>) x6 y6) (x7 <> y7)
 
 -- | Things that are exported and aren't of use if they aren't used. Don't worry about:
 --
@@ -52,9 +55,11 @@ hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Se
           names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
 parseHi :: FilePath -> IO Hi
-parseHi fp = fmap (parse fp) . readFile' $ fp
+parseHi file = do
+    hi <- parse <$> readFile' file
+    return hi{hiFileName=file}
 
-parse fp = mconcat . map f . parseHanging .  lines
+parse = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}

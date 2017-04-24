@@ -1,16 +1,18 @@
 {-# LANGUAGE DeriveGeneric, RecordWildCards, GeneralizedNewtypeDeriving #-}
 
 module Hi(
-    Hi(..), Ident(..),
-    parseHi,
-    dedupeHi,
-    HiKey(), hiKey,
-    hiExportIdentUnsupported
+    HiKey(), Hi(..), Ident(..),
+    hiExportIdentUnsupported,
+    hiParseDirectory
     ) where
 
 import qualified Data.HashSet as Set
 import qualified Data.HashMap.Lazy as Map
+import System.FilePath
+import System.Directory.Extra
 import GHC.Generics
+import Data.Tuple.Extra
+import Control.Monad
 import Data.Char
 import Data.Hashable
 import Data.List.Extra
@@ -25,9 +27,7 @@ data Ident = Ident {identModule :: String, identName :: String}
 instance Hashable Ident
 
 data Hi = Hi
-    {hiFileName :: [FilePath]
-        -- ^ Files the Hi file was read from, initially a singleton before dedupeHi
-    ,hiModuleName :: String
+    {hiModuleName :: String
         -- ^ Module name
     ,hiImportPackage :: Set.HashSet PackageName
         -- ^ Packages imported by this module
@@ -43,10 +43,17 @@ data Hi = Hi
 instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi [] "" mempty mempty mempty mempty mempty
-    mappend (Hi x1 x2 x3 x4 x5 x6 x7) (Hi y1 y2 y3 y4 y5 y6 y7) =
-        Hi (x1 <> y1) (x2 ?: y2) (x3 <> y3) (x4 <> y4) (x5 <> y5)
-            (Map.unionWith (<>) x6 y6) (x7 <> y7)
+    mempty = Hi mempty mempty mempty mempty mempty mempty
+    mappend x y = Hi
+        {hiModuleName = f (?:) hiModuleName
+        ,hiImportPackage = f (<>) hiImportPackage
+        ,hiExportIdent = f (<>) hiExportIdent
+        ,hiImportIdent = f (<>) hiImportIdent
+        ,hiSignatures = f (Map.unionWith (<>)) hiSignatures
+        ,hiFieldName = f (<>) hiFieldName
+        }
+        where f op sel = sel x `op` sel y
+
 
 -- | Things that are exported and aren't of use if they aren't used. Don't worry about:
 --
@@ -60,22 +67,20 @@ hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Se
 -- | Don't expose that we're just using the filename internally
 newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)
 
-hiKey :: Hi -> HiKey
-hiKey Hi{..} = HiKey $ head hiFileName
+hiParseDirectory :: FilePath -> IO (Map.HashMap FilePath HiKey, Map.HashMap HiKey Hi)
+hiParseDirectory dir = do
+    files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
+    his <- forM files $ \file -> do
+        src <- readFile' file
+        return (drop (length dir + 1) file, hiParseContents src)
+    let keys = Map.fromList $ map (second HiKey . swap) his
+    let mp1 = Map.fromList $ map (second (keys Map.!)) his
+    let mp2 = Map.fromList $ map swap $ Map.toList keys
+    return (mp1, mp2)
 
-dedupeHi :: [Hi] -> [Hi]
-dedupeHi xs =
-    map (\(x,fs) -> x{hiFileName=fs}) $
-    Map.toList $
-    Map.fromListWith (++) [(x{hiFileName=[]}, hiFileName x) | x <- xs]
 
-
-parseHi :: FilePath -> IO Hi
-parseHi file = do
-    hi <- parse file <$> readFile' file
-    return hi{hiFileName=[file]}
-
-parse file = mconcat . map f . parseHanging .  lines
+hiParseContents :: String -> Hi
+hiParseContents = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
@@ -83,9 +88,7 @@ parse file = mconcat . map f . parseHanging .  lines
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
-                xs ->
-                    let at xs i = if length xs > i then xs !! i else error $ show (file, xs, i) in
-                    mempty{hiImportIdent = Set.fromList $ map (Ident (words x `at` 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
+                xs -> mempty{hiImportIdent = Set.fromList $ map (Ident (words x !! 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | length x == 32, all isHexDigit x,
                 (y,ys):_ <- parseHanging xs,
                 fun:"::":typ <- concatMap (wordsBy (`elem` ",[]{} ")) $ y:ys,

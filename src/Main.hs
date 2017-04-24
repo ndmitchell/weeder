@@ -77,17 +77,16 @@ weedDirectory dir = do
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         let distDir = takeDirectory cabalFile </> distSuffix
-        his <- mapM parseHi . filter ((==) ".dump-hi" . takeExtension) =<< listFilesRecursive distDir
-        his <- return $ Map.fromList [(drop (length distDir + 1) y, x) | x <- dedupeHi his, y <- hiFileName x]
+        (fileToKey, keyToHi) <- hiParseDirectory distDir
         putStrLn $ "= Weeding " ++ cabalName ++ " ="
-        cabalSections <- return $ map (id &&& findHis his) cabalSections
+        cabalSections <- return $ map (id &&& findHis fileToKey) cabalSections
 
         -- detect files used in more than one group
         let reused :: [(HiKey, ModuleName, [CabalSectionType])] =
                 filter ((> 1) . length . thd3) $
                 map (\((a,b),c) -> (a,b,c)) $
                 groupSort $
-                [((hiKey x, hiModuleName x), cabalSectionType sect) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
+                [((x, hiModuleName $ keyToHi Map.! x), cabalSectionType sect) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
         if null reused then
             putStrLn "No modules reused between components"
         else
@@ -99,8 +98,9 @@ weedDirectory dir = do
 
         generalBad <- forM cabalSections $ \(CabalSection{..}, (external, internal)) -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ show cabalSectionType ++ " =="
-            shared <- return $ Set.fromList [hiModuleName x | x <- external ++ internal, hiKey x `Set.member` shared]
+            shared <- return $ Set.fromList [hiModuleName $ keyToHi Map.! x | x <- external ++ internal, x `Set.member` shared]
             shared <- return Set.empty
+            (external, internal) <- return $ both (map (keyToHi Map.!)) (external, internal)
 
             -- first go looking for packages that are not used
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
@@ -147,7 +147,7 @@ weedDirectory dir = do
 
 
 -- (exposed, internal)
-findHis :: Map.HashMap FilePath Hi -> CabalSection -> ([Hi], [Hi])
+findHis :: Map.HashMap FilePath a -> CabalSection -> ([a], [a])
 findHis his sect@CabalSection{..} = (external, internal)
     where
         external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
@@ -156,7 +156,7 @@ findHis his sect@CabalSection{..} = (external, internal)
 
 isPaths = isPrefixOf "Paths_"
 
-findHi :: Map.HashMap FilePath Hi -> CabalSection -> Either FilePath ModuleName -> Hi
+findHi :: Map.HashMap FilePath a -> CabalSection -> Either FilePath ModuleName -> a
 findHi his cabal@CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
     where
         err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)

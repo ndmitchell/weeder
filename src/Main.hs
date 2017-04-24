@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RecordWildCards #-}
+{-# LANGUAGE TupleSections, RecordWildCards, ScopedTypeVariables #-}
 
 module Main(main) where
 
@@ -77,30 +77,29 @@ weedDirectory dir = do
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         let distDir = takeDirectory cabalFile </> distSuffix
-        his <- listFilesRecursive distDir
-        his <- Map.fromList <$> sequence [(drop (length distDir + 1) x,) <$> parseHi x | x <- his, takeExtension x == ".dump-hi"]
-
+        his <- mapM parseHi . filter ((==) ".dump-hi" . takeExtension) =<< listFilesRecursive distDir
+        his <- return $ Map.fromList [(drop (length distDir + 1) y, x) | x <- dedupeHi his, y <- hiFileName x]
         putStrLn $ "= Weeding " ++ cabalName ++ " ="
         cabalSections <- return $ map (id &&& findHis his) cabalSections
 
         -- detect files used in more than one group
-        let reused =
+        let reused :: [(HiKey, ModuleName, [CabalSectionType])] =
+                filter ((> 1) . length . thd3) $
+                map (\((a,b),c) -> (a,b,c)) $
                 groupSort $
-                map (\xs -> (map fst3 xs, snd3 $ head xs)) $
-                filter ((> 1) . length) $
-                map (nubOrdOn thd3) $
-                Map.elems $
-                Map.fromListWith (++) [(x{hiFileName=""}, [(cabalSectionLabel sect, hiModuleName x, hiFileName x)]) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
+                [((hiKey x, hiModuleName x), cabalSectionType sect) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
         if null reused then
             putStrLn "No modules reused between components"
         else
             reportErrors $ concat
-                [ ("Reused between " ++ intercalate ", " pkgs) : listLines mods
-                | (pkgs, mods) <- reused]
+                [ ("Reused between " ++ intercalate ", " (map show pkgs)) : listLines mods
+                | (pkgs, mods) <- groupSort $ map (thd3 &&& snd3) reused]
+        let shared = Set.fromList $ map fst3 reused
         putStrLn ""
 
-        forM_ cabalSections $ \(sect@CabalSection{..}, (external, internal)) -> do
-            putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ cabalSectionLabel sect ++ " =="
+        generalBad <- forM cabalSections $ \(CabalSection{..}, (external, internal)) -> do
+            putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ show cabalSectionType ++ " =="
+            shared <- return $ Set.fromList [hiModuleName x | x <- external ++ internal, hiKey x `Set.member` shared]
 
             -- first go looking for packages that are not used
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
@@ -131,13 +130,17 @@ weedDirectory dir = do
             -- if someone imports and exports something assume that isn't also a use (find some redundant warnings)
             let usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
             let bad = visibleInternals `Set.difference` Set.union publicAPI usedAnywhere
+            let badPerModule = groupSort [(m,i) | Ident m i <- Set.toList bad]
+            let (myBad, generalBad) = partition (flip Set.member shared . fst) badPerModule
             if Set.null bad then
                 putStrLn "No weeds in the module exports"
             else
                 reportErrors $ concat
-                    [ ("Weeds exported from " ++ m) : listLines is
-                    | (m, is) <- groupSort [(m,i) | Ident m i <- Set.toList bad]]
+                    [ ("Weeds exported from " ++ m) : listLines is | (m, is) <- myBad]
             putStrLn ""
+            return (cabalSectionType, generalBad)
+
+        print generalBad
 
     readIORef errCount
 
@@ -153,9 +156,9 @@ findHis his sect@CabalSection{..} = (external, internal)
 isPaths = isPrefixOf "Paths_"
 
 findHi :: Map.HashMap FilePath Hi -> CabalSection -> Either FilePath ModuleName -> Hi
-findHi his CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
+findHi his cabal@CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
     where
         err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
         poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
-               | root <- ["build" </> cabalSectionName </> (cabalSectionName ++ "-tmp") | cabalSectionName /= ""] ++ ["build"]
+               | root <- ["build" </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++ ["build"]
                , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]

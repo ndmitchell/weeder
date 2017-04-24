@@ -1,8 +1,10 @@
-{-# LANGUAGE DeriveGeneric, RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric, RecordWildCards, GeneralizedNewtypeDeriving #-}
 
 module Hi(
     Hi(..), Ident(..),
     parseHi,
+    dedupeHi,
+    HiKey(), hiKey,
     hiExportIdentUnsupported
     ) where
 
@@ -23,8 +25,8 @@ data Ident = Ident {identModule :: String, identName :: String}
 instance Hashable Ident
 
 data Hi = Hi
-    {hiFileName :: FilePath
-        -- ^ File the Hi file was read from
+    {hiFileName :: [FilePath]
+        -- ^ Files the Hi file was read from, initially a singleton before dedupeHi
     ,hiModuleName :: String
         -- ^ Module name
     ,hiImportPackage :: Set.HashSet PackageName
@@ -41,9 +43,9 @@ data Hi = Hi
 instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi "" "" mempty mempty mempty mempty mempty
+    mempty = Hi [] "" mempty mempty mempty mempty mempty
     mappend (Hi x1 x2 x3 x4 x5 x6 x7) (Hi y1 y2 y3 y4 y5 y6 y7) =
-        Hi (x1 ?: y1) (x2 ?: y2) (x3 <> y3) (x4 <> y4) (x5 <> y5)
+        Hi (x1 <> y1) (x2 ?: y2) (x3 <> y3) (x4 <> y4) (x5 <> y5)
             (Map.unionWith (<>) x6 y6) (x7 <> y7)
 
 -- | Things that are exported and aren't of use if they aren't used. Don't worry about:
@@ -55,12 +57,25 @@ hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Se
     where supported = Set.unions [v | (k,v) <- Map.toList hiSignatures, k `Set.member` names]
           names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
+-- | Don't expose that we're just using the filename internally
+newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)
+
+hiKey :: Hi -> HiKey
+hiKey Hi{..} = HiKey $ head hiFileName
+
+dedupeHi :: [Hi] -> [Hi]
+dedupeHi xs =
+    map (\(x,fs) -> x{hiFileName=fs}) $
+    Map.toList $
+    Map.fromListWith (++) [(x{hiFileName=[]}, hiFileName x) | x <- xs]
+
+
 parseHi :: FilePath -> IO Hi
 parseHi file = do
-    hi <- parse <$> readFile' file
-    return hi{hiFileName=file}
+    hi <- parse file <$> readFile' file
+    return hi{hiFileName=[file]}
 
-parse = mconcat . map f . parseHanging .  lines
+parse file = mconcat . map f . parseHanging .  lines
     where
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
@@ -68,7 +83,9 @@ parse = mconcat . map f . parseHanging .  lines
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
-                xs -> mempty{hiImportIdent = Set.fromList $ map (Ident (words x !! 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
+                xs ->
+                    let at xs i = if length xs > i then xs !! i else error $ show (file, xs, i) in
+                    mempty{hiImportIdent = Set.fromList $ map (Ident (words x `at` 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | length x == 32, all isHexDigit x,
                 (y,ys):_ <- parseHanging xs,
                 fun:"::":typ <- concatMap (wordsBy (`elem` ",[]{} ")) $ y:ys,

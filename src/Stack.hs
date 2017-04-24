@@ -13,7 +13,10 @@ newtype Stack = Stack {stackPackages :: [FilePath]}
 parseStack :: FilePath -> IO Stack
 parseStack file = either throwIO (return . f) =<< decodeFileEither file
     where
-        f (Object x)
-            | Just (Array xs) <- Map.lookup "packages" x
-            = Stack [T.unpack s | String s <- V.toList xs]
-        f _ = error "Failed to parse stack file"
+        fromObject (Object x) = x
+        fromArray (Array xs) = V.toList xs
+        fromString (String s) = T.unpack s
+
+        f x = case Map.lookup "packages" $ fromObject x of
+            Nothing -> Stack ["."]
+            Just xs -> Stack $ map fromString $ fromArray xs

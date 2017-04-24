@@ -2,8 +2,8 @@
 
 module Cabal(
     Cabal(..), CabalSection(..), CabalSectionType,
-    cabalSectionLabel,
     parseCabal,
+    cabalSectionTypeName,
     selectCabalFile
     ) where
 
@@ -33,11 +33,21 @@ instance Monoid Cabal where
     mempty = Cabal "" []
     mappend (Cabal x1 x2) (Cabal y1 y2) = Cabal (x1?:y1) (x2++y2)
 
-data CabalSectionType = Library | Executable | TestSuite deriving Show
+data CabalSectionType = Library | Executable String | TestSuite String
+    deriving (Eq,Ord)
+
+cabalSectionTypeName :: CabalSectionType -> Maybe String
+cabalSectionTypeName Library = Nothing
+cabalSectionTypeName (Executable x) = Just x
+cabalSectionTypeName (TestSuite x) = Just x
+
+instance Show CabalSectionType where
+    show Library = "library"
+    show (Executable x) = "executable " ++ x
+    show (TestSuite x) = "test-suite " ++ x
 
 data CabalSection = CabalSection
     {cabalSectionType :: CabalSectionType
-    ,cabalSectionName :: String
     ,cabalMainIs :: FilePath
     ,cabalExposedModules :: [ModuleName]
     ,cabalOtherModules :: [ModuleName]
@@ -45,16 +55,10 @@ data CabalSection = CabalSection
     ,cabalPackages :: [PackageName]
     } deriving Show
 
-cabalSectionLabel :: CabalSection -> String
-cabalSectionLabel CabalSection{..} = case cabalSectionType of
-    Library -> "library"
-    Executable -> "executable " ++ cabalSectionName
-    TestSuite -> "test-suite " ++ cabalSectionName
-
 instance Monoid CabalSection where
-    mempty = CabalSection Library "" "" [] [] [] []
-    mappend (CabalSection x1 x2 x3 x4 x5 x6 x7) (CabalSection y1 y2 y3 y4 y5 y6 y7) =
-        CabalSection x1 (x2?:y2) (x3?:y3) (x4<>y4) (x5<>y5) (x6<>y6) (x7<>y7)
+    mempty = CabalSection Library "" [] [] [] []
+    mappend (CabalSection x1 x2 x3 x4 x5 x6) (CabalSection y1 y2 y3 y4 y5 y6) =
+        CabalSection x1 (x2?:y2) (x3<>y3) (x4<>y4) (x5<>y5) (x6<>y6)
 
 
 parseCabal :: FilePath -> IO Cabal
@@ -67,13 +71,13 @@ parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
 
         f (keyName -> (key, name), xs) = case key of
             "name:" -> mempty{cabalName=name}
-            "library" -> mempty{cabalSections=[parseSection Library "" xs]}
-            "executable" -> mempty{cabalSections=[parseSection Executable name xs]}
-            "test-suite" -> mempty{cabalSections=[parseSection TestSuite name xs]}
+            "library" -> mempty{cabalSections=[parseSection Library xs]}
+            "executable" -> mempty{cabalSections=[parseSection (Executable name) xs]}
+            "test-suite" -> mempty{cabalSections=[parseSection (TestSuite name) xs]}
             _ -> mempty
 
-parseSection typ name xs =
-    mempty{cabalSectionType=typ, cabalSectionName=name} <>
+parseSection typ xs =
+    mempty{cabalSectionType=typ} <>
     mconcat (map f $ parseHanging xs)
     where
         keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, filter (not . null) $ map trim $ x2:xs)

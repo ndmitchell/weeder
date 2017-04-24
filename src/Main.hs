@@ -75,7 +75,7 @@ weedDirectory dir = do
         let distDir = takeDirectory cabalFile </> stackDistDir
         (fileToKey, keyToHi) <- hiParseDirectory distDir
         putStrLn $ "= Weeding " ++ cabalName ++ " ="
-        cabalSections <- return $ map (id &&& findHis fileToKey) cabalSections
+        cabalSections <- return $ map (id &&& selectHiFiles fileToKey) cabalSections
 
         -- detect files used in more than one group
         let reused :: [(HiKey, ModuleName, [CabalSectionType])] =
@@ -107,7 +107,7 @@ weedDirectory dir = do
 
             -- now look for modules which are imported but not in the other-modules list
             let imports = Map.fromList [(hiModuleName, Set.map identModule hiImportIdent) | Hi{..} <- external ++ internal]
-            let missing = Set.filter (not . isPaths) $
+            let missing = Set.filter (not . isPathsModule) $
                           Set.unions (Map.elems imports) `Set.difference`
                           Set.fromList (Map.keys imports)
             let excessive = Set.fromList (map hiModuleName internal) `Set.difference`
@@ -140,22 +140,3 @@ weedDirectory dir = do
         return ()
 
     readIORef errCount
-
-
--- (exposed, internal)
-findHis :: Map.HashMap FilePath a -> CabalSection -> ([a], [a])
-findHis his sect@CabalSection{..} = (external, internal)
-    where
-        external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
-                   [findHi his sect $ Right x | x <- cabalExposedModules]
-        internal = [findHi his sect $ Right x | x <- filter (not . isPaths) cabalOtherModules]
-
-isPaths = isPrefixOf "Paths_"
-
-findHi :: Map.HashMap FilePath a -> CabalSection -> Either FilePath ModuleName -> a
-findHi his cabal@CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
-    where
-        err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
-        poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
-               | root <- ["build" </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++ ["build"]
-               , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]

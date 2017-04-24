@@ -4,7 +4,8 @@ module Util(
     parseHanging,
     (?:),
     isHaskellSymbol,
-    reachable
+    reachable,
+    isPathsModule
     ) where
 
 import Data.Char
@@ -51,3 +52,7 @@ reachable follow = f Set.empty
         f done (x:xs)
             | x `Set.member` done = f done xs
             | otherwise = f (Set.insert x done) $ follow x ++ xs
+
+-- | Is a given module name the specially generated cabal Paths_foo module
+isPathsModule :: ModuleName -> Bool
+isPathsModule = isPrefixOf "Paths_"

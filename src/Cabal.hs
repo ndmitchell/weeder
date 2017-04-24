@@ -4,13 +4,16 @@ module Cabal(
     Cabal(..), CabalSection(..), CabalSectionType,
     parseCabal,
     cabalSectionTypeName,
-    selectCabalFile
+    selectCabalFile,
+    selectHiFiles
     ) where
 
 import System.IO.Extra
 import System.Directory.Extra
 import System.FilePath
+import qualified Data.HashMap.Strict as Map
 import Util
+import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
 import Data.Monoid
@@ -23,6 +26,23 @@ selectCabalFile dir = do
     case filter ((==) ".cabal" . takeExtension) xs of
         [x] -> return x
         _ -> fail $ "Didn't find exactly 1 cabal file in " ++ dir
+
+-- | Return the (exposed Hi files, internal Hi files)
+selectHiFiles :: Map.HashMap FilePath a -> CabalSection -> ([a], [a])
+selectHiFiles his sect@CabalSection{..} = (external, internal)
+    where
+        external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
+                   [findHi his sect $ Right x | x <- cabalExposedModules]
+        internal = [findHi his sect $ Right x | x <- filter (not . isPathsModule) cabalOtherModules]
+
+        findHi :: Map.HashMap FilePath a -> CabalSection -> Either FilePath ModuleName -> a
+        findHi his cabal@CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
+            where
+                err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
+                poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
+                    | root <- ["build" </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++ ["build"]
+                    , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]
+
 
 data Cabal = Cabal
     {cabalName :: PackageName

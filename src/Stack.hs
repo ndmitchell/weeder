@@ -9,6 +9,8 @@ import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
 import qualified Data.Vector as V
 import System.Process
+import Data.Functor
+import Prelude
 
 
 data Stack = Stack

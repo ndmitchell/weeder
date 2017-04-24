@@ -81,7 +81,7 @@ weedDirectory dir = do
         let reused :: [(HiKey, ModuleName, [CabalSectionType])] =
                 filter ((> 1) . length . thd3) $
                 map (\((a,b),c) -> (a,b,c)) $
-                groupSort $
+                groupSort
                 [((x, hiModuleName $ keyToHi Map.! x), cabalSectionType sect) | (sect, (x1,x2)) <- cabalSections, x <- x1++x2]
         if null reused then
             putStrLn "No modules reused between components"

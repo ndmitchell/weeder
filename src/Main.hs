@@ -100,6 +100,7 @@ weedDirectory dir = do
         generalBad <- forM cabalSections $ \(CabalSection{..}, (external, internal)) -> do
             putStrLn $ "== Weeding " ++ cabalName ++ ", " ++ show cabalSectionType ++ " =="
             shared <- return $ Set.fromList [hiModuleName x | x <- external ++ internal, hiKey x `Set.member` shared]
+            shared <- return Set.empty
 
             -- first go looking for packages that are not used
             let bad = Set.fromList cabalPackages `Set.difference` Set.unions (map hiImportPackage $ external ++ internal)
@@ -131,8 +132,8 @@ weedDirectory dir = do
             let usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
             let bad = visibleInternals `Set.difference` Set.union publicAPI usedAnywhere
             let badPerModule = groupSort [(m,i) | Ident m i <- Set.toList bad]
-            let (myBad, generalBad) = partition (flip Set.member shared . fst) badPerModule
-            if Set.null bad then
+            let (generalBad, myBad) = partition (flip Set.member shared . fst) badPerModule
+            if null myBad then
                 putStrLn "No weeds in the module exports"
             else
                 reportErrors $ concat
@@ -140,7 +141,7 @@ weedDirectory dir = do
             putStrLn ""
             return (cabalSectionType, generalBad)
 
-        print generalBad
+        return ()
 
     readIORef errCount
 

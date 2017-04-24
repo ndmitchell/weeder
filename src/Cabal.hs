@@ -3,7 +3,6 @@
 module Cabal(
     Cabal(..), CabalSection(..), CabalSectionType,
     parseCabal,
-    cabalSectionTypeName,
     selectCabalFile,
     selectHiFiles
     ) where

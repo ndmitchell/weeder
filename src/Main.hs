@@ -58,12 +58,8 @@ listLines = map ("  "++) . sort
 
 weedDirectory :: FilePath -> IO Int
 weedDirectory dir = do
-    dir <- return $ if takeFileName dir == "stack.yaml" then takeDirectory dir else dir
-    dir <- canonicalizePath dir
-    -- the distDir is relative to each .cabal file directory
-    distSuffix <- fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir"]){cwd=Just dir} ""
-
-    Stack{..} <- parseStack $ dir </> "stack.yaml"
+    file <- do b <- doesDirectoryExist dir; return $ if b then dir </> "stack.yaml" else dir
+    Stack{..} <- parseStack file
     cabals <- forM stackPackages $ \x -> do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file
@@ -76,7 +72,7 @@ weedDirectory dir = do
             putStr $ unlines xs
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
-        let distDir = takeDirectory cabalFile </> distSuffix
+        let distDir = takeDirectory cabalFile </> stackDistDir
         (fileToKey, keyToHi) <- hiParseDirectory distDir
         putStrLn $ "= Weeding " ++ cabalName ++ " ="
         cabalSections <- return $ map (id &&& findHis fileToKey) cabalSections

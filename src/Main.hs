@@ -29,7 +29,6 @@ main = do
     if "--test" `elem` args then
         runTest ("--update" `elem` args)
     else do
-        -- FIXME: Should return an exit code if there are hints 
         errs <- fmap sum $ mapM weedDirectory $ if null args then ["."] else args
         when (errs > 0) exitFailure
 

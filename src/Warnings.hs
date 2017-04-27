@@ -26,7 +26,7 @@ data Warning = Warning
 
 warningPath :: Warning -> [String]
 warningPath Warning{..} =
-    [intercalate "," $ map show warningSections
+    [intercalate ", " $ map show warningSections
     ,warningMessage] ++
     catMaybes [warningPackage, warningModule, warningIdentifier]
 
@@ -50,7 +50,7 @@ warnings hi sections = map (\x -> x{warningSections = sort $ warningSections x})
 
 warnReusedModuleBetweenSections :: S -> [Warning]
 warnReusedModuleBetweenSections S{..} =
-    [ Warning "Module reused between two components" ss Nothing (Just $ hiModuleName $ hi m) Nothing
+    [ Warning "Module reused between components" ss Nothing (Just $ hiModuleName $ hi m) Nothing
     | (m, ss) <- groupSort [(x, cabalSectionType c) | (c, (x1,x2)) <- sections, x <- x1++x2]
     , length ss > 1]
 

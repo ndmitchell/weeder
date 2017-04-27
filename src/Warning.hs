@@ -68,10 +68,11 @@ data Val = Val String String [Val]
 valToValue :: [Val] -> Value
 valToValue = Array . V.fromList . map f
     where
-        f (Val sect name xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $
-            Object (Map.singleton (T.pack "name") (String $ T.pack name)) : map f xs
-        f (End sect [x]) = Object $ Map.singleton (T.pack sect) $ String $ T.pack x
-        f (End sect xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $ map (String . T.pack) xs
+        pair k v = Object $ Map.singleton (T.pack k) v
+        f (Val sect name xs) = pair sect $ Array $ V.fromList $
+            pair "name" (String $ T.pack name) : map f xs
+        f (End sect [x]) = pair sect $ String $ T.pack x
+        f (End sect xs) = pair sect $ Array $ V.fromList $ map (String . T.pack) xs
 
 valueToVal :: Value -> [Val]
 valueToVal = f

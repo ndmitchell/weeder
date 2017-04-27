@@ -49,9 +49,9 @@ warningUnpath [pkg,sect,msg,deps,mod,ident] = Warning
     (f deps) (f mod) (f ident)
     where f s = if null s then Nothing else Just s
 
-showWarningsPretty :: [Warning] -> [String]
-showWarningsPretty [] = ["No warnings"]
-showWarningsPretty warn = warningTree
+showWarningsPretty :: PackageName -> [Warning] -> [String]
+showWarningsPretty pkg [] = ["= Package " ++ pkg ++ " =","No warnings"]
+showWarningsPretty _ warn = warningTree
     ([\x -> "= Package " ++ x ++ " =",\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
     map (catMaybes . warningPath) warn
 

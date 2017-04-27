@@ -47,7 +47,7 @@ weedDirectory Cmd{..} dir = do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         let warn = check (keyToHi Map.!) cabalName $ map (id &&& selectHiFiles fileToKey) cabalSections
         unless (cmdJson || cmdYaml) $
-            putStrLn $ unlines $ showWarningsPretty warn
+            putStrLn $ unlines $ showWarningsPretty cabalName warn
         return warn
 
     when cmdJson $ putStrLn $ showWarningsJson res

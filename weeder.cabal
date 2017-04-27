@@ -42,5 +42,6 @@ executable weeder
         Hi
         Stack
         Util
-        Warnings
+        Check
+        Warning
         CmdLine

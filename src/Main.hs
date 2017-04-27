@@ -6,7 +6,6 @@ import Hi
 import Cabal
 import Stack
 import Data.List.Extra
-import Data.Maybe
 import Data.Functor
 import Data.Tuple.Extra
 import Control.Monad
@@ -15,7 +14,8 @@ import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
 import System.Directory.Extra
 import System.FilePath
-import Warnings
+import Check
+import Warning
 import CmdLine
 import Prelude
 
@@ -40,17 +40,6 @@ weedDirectory Cmd{..} dir = do
     fmap sum $ forM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         putStrLn $ "= Project " ++ cabalName ++ " ="
-        let warn = warnings (keyToHi Map.!) $ map (id &&& selectHiFiles fileToKey) cabalSections
-        if null warn then
-            putStrLn "No warnings"
-        else
-            putStr $ tail $ unlines $ warningTree
-                ([\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
-                map warningPath warn
-        putStrLn ""
+        let warn = check (keyToHi Map.!) $ map (id &&& selectHiFiles fileToKey) cabalSections
+        putStrLn $ unlines $ showWarningsPretty warn
         return $ length warn
-
-warningTree :: Ord a => [a -> a] -> [[a]] -> [a]
-warningTree (f:fs) xs = concat
-    [ f title : warningTree fs inner
-    | (title,inner) <- groupSort $ mapMaybe uncons xs]

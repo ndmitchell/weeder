@@ -1,46 +1,24 @@
 {-# LANGUAGE TupleSections, RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
 
-module Warnings(
-    Warning(..),
-    warningPath,
-    warnings
-    ) where
+module Check(check) where
 
 import Hi
 import Cabal
 import Util
-import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
 import qualified Data.HashSet as Set
 import qualified Data.HashMap.Strict as Map
+import Warning
 
-
-data Warning = Warning
-    {warningMessage :: String
-    ,warningSections :: [CabalSectionType]
-    ,warningPackage :: Maybe PackageName
-    ,warningModule :: Maybe ModuleName
-    ,warningIdentifier :: Maybe IdentName
-    } deriving Show
-
-warningPath :: Warning -> [String]
-warningPath Warning{..} =
-    [unwords $ map show warningSections
-    ,warningMessage] ++
-    catMaybes [warningPackage, warningModule, warningIdentifier]
 
 data S = S
     {hi :: HiKey -> Hi
     ,sections :: [(CabalSection, ([HiKey], [HiKey]))]
     }
 
-
----------------------------------------------------------------------
--- ACTUAL WARNING COMPUTATION
-
-warnings :: (HiKey -> Hi) -> [(CabalSection, ([HiKey], [HiKey]))] -> [Warning]
-warnings hi sections = map (\x -> x{warningSections = sort $ warningSections x}) $
+check :: (HiKey -> Hi) -> [(CabalSection, ([HiKey], [HiKey]))] -> [Warning]
+check hi sections = map (\x -> x{warningSections = sort $ warningSections x}) $
     warnReusedModuleBetweenSections s ++
     warnRedundantPackageDependency s ++
     warnIncorrectOtherModules s ++

@@ -1,3 +1,4 @@
 :set -fwarn-unused-binds -fwarn-unused-imports
 :set -isrc
 :load src\Main.hs
+:def test const $ return ":main --test"

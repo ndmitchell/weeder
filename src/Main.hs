@@ -64,10 +64,16 @@ weedDirectory dir = do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         putStrLn $ "= Project " ++ cabalName ++ " ="
         let warn = warnings (keyToHi Map.!) $ map (id &&& selectHiFiles fileToKey) cabalSections
-        forM_ (groupSortOn warningSections warn) $ \warn -> do
-            putStrLn $ "== Section " ++ intercalate ", " (map show $ warningSections $ head warn) ++ " =="
-            forM_ (groupOn warningMessage warn) $ \warn ->
-                putStrLn $ warningMessage $ head warn
-            print warn
-            putStrLn ""
+        if null warn then
+            putStrLn "No warnings"
+        else
+            putStr $ tail $ unlines $ warningTree
+                ([\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
+                map warningPath warn
+        putStrLn ""
         return $ length warn
+
+warningTree :: Ord a => [a -> a] -> [[a]] -> [a]
+warningTree (f:fs) xs = concat
+    [ f title : warningTree fs inner
+    | (title,inner) <- groupSort $ mapMaybe uncons xs]

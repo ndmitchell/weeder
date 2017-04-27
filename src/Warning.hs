@@ -1,10 +1,10 @@
-{-# LANGUAGE TupleSections, RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections, RecordWildCards, ScopedTypeVariables #-}
 
 module Warning(
     Warning(..),
     showWarningsPretty,
---    showWarningsYaml,
---    showWarningsJSON,
+    showWarningsYaml,
+    showWarningsJson,
 --    readConfigFle,
 --    ignoreWarnings
     ) where
@@ -13,6 +13,13 @@ import Cabal
 import Util
 import Data.Maybe
 import Data.List.Extra
+import Data.Aeson as JSON
+import Data.Yaml as Yaml
+import qualified Data.Vector as V
+import qualified Data.Text as T
+import qualified Data.HashMap.Strict as Map
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as LBS
 
 
 data Warning = Warning
@@ -23,19 +30,45 @@ data Warning = Warning
     ,warningIdentifier :: Maybe IdentName
     } deriving Show
 
-warningPath :: Warning -> [String]
+warningPath :: Warning -> [Maybe String]
 warningPath Warning{..} =
-    [unwords $ map show warningSections
-    ,warningMessage] ++
-    catMaybes [warningPackage, warningModule, warningIdentifier]
+    [Just $ unwords $ map show warningSections
+    ,Just $ warningMessage
+    ,warningPackage
+    ,warningModule
+    ,warningIdentifier]
 
 showWarningsPretty :: [Warning] -> [String]
 showWarningsPretty [] = ["No warnings"]
 showWarningsPretty warn = (\(x:xs) -> tail x:xs) $ warningTree
     ([\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
-    map warningPath warn
+    map (catMaybes . warningPath) warn
 
 warningTree :: Ord a => [a -> a] -> [[a]] -> [a]
 warningTree (f:fs) xs = concat
     [ f title : warningTree fs inner
     | (title,inner) <- groupSort $ mapMaybe uncons xs]
+
+-- (section, name, children)
+data Val = Val String String [Val]
+
+val :: [Val] -> Value
+val = Array . V.fromList . map f
+    where f (Val sect name xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $
+              Object (Map.singleton (T.pack "name") (String $ T.pack name)) : map f xs
+
+showWarningsValue :: [(PackageName, [Warning])] -> Value
+showWarningsValue xs = val $ f ["package","section","message","package","module","identifier",""]
+    [Just p : dropWhileEnd isJust (warningPath x) | (p,xs) <- xs, x <- xs]
+    where
+        f (name:names) xs = concat
+                [ case a of
+                      Nothing -> f names b
+                      Just a -> [Val name a $ f names b]
+                | (a,b) <- groupSort $ mapMaybe uncons xs]
+
+showWarningsJson :: [(PackageName, [Warning])] -> String
+showWarningsJson = LBS.unpack . JSON.encode . showWarningsValue
+
+showWarningsYaml :: [(PackageName, [Warning])] -> String
+showWarningsYaml = BS.unpack . Yaml.encode . showWarningsValue

@@ -35,6 +35,9 @@ executable weeder
         hashable,
         filepath,
         cmdargs,
+        aeson,
+        yaml,
+        bytestring,
         process >= 1.2.3.0,
         extra
     other-modules:

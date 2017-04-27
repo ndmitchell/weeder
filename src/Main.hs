@@ -37,9 +37,13 @@ weedDirectory Cmd{..} dir = do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file
 
-    fmap sum $ forM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
+    res <- forM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
-        putStrLn $ "= Project " ++ cabalName ++ " ="
         let warn = check (keyToHi Map.!) $ map (id &&& selectHiFiles fileToKey) cabalSections
-        putStrLn $ unlines $ showWarningsPretty warn
-        return $ length warn
+        unless (cmdJson || cmdYaml) $
+            putStrLn $ unlines $ ("= Project " ++ cabalName ++ " =") : showWarningsPretty warn
+        return (cabalName, warn)
+
+    when cmdJson $ putStrLn $ showWarningsJson res
+    when cmdYaml $ putStrLn $ showWarningsYaml res
+    return $ sum $ map (length . snd) res

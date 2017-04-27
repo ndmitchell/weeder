@@ -22,12 +22,12 @@ import Util
 import System.IO.Extra
 import Prelude
 
-data Ident = Ident {identModule :: String, identName :: String}
+data Ident = Ident {identModule :: ModuleName, identName :: IdentName}
     deriving (Show,Eq,Ord,Generic)
 instance Hashable Ident
 
 data Hi = Hi
-    {hiModuleName :: String
+    {hiModuleName :: ModuleName
         -- ^ Module name
     ,hiImportPackage :: Set.HashSet PackageName
         -- ^ Packages imported by this module
@@ -35,7 +35,7 @@ data Hi = Hi
         -- ^ Identifiers exported by this module
     ,hiImportIdent :: Set.HashSet Ident
         -- ^ Identifiers used by this module
-    ,hiSignatures :: Map.HashMap String (Set.HashSet Ident)
+    ,hiSignatures :: Map.HashMap IdentName (Set.HashSet Ident)
         -- ^ Type signatures of functions defined in this module and the types they refer to
     ,hiFieldName :: Set.HashSet Ident
         -- ^ Things that are field names

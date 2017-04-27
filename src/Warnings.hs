@@ -1,10 +1,15 @@
 {-# LANGUAGE TupleSections, RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
 
-module Warnings(Warning(..), warnings) where
+module Warnings(
+    Warning(..),
+    warningPath,
+    warnings
+    ) where
 
 import Hi
 import Cabal
 import Util
+import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
 import qualified Data.HashSet as Set
@@ -18,6 +23,12 @@ data Warning = Warning
     ,warningModule :: Maybe ModuleName
     ,warningIdentifier :: Maybe IdentName
     } deriving Show
+
+warningPath :: Warning -> [String]
+warningPath Warning{..} =
+    [intercalate "," $ map show warningSections
+    ,warningMessage] ++
+    catMaybes [warningPackage, warningModule, warningIdentifier]
 
 data S = S
     {hi :: HiKey -> Hi

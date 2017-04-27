@@ -53,8 +53,14 @@ weedDirectory Cmd{..} dir = do
     when cmdJson $ putStrLn $ showWarningsJson res
     when cmdYaml $ putStrLn $ showWarningsYaml res
     if cmdMatch then
-        if sort ignore == sort res
-        then putStrLn "Warnings match" >> return Good
-        else putStrLn "ERROR: Warnings do not match" >> return Bad
+        if sort ignore == sort res then do
+            putStrLn "Warnings match"
+            return Good
+        else do
+            putStrLn "MISSING WARNINGS"
+            putStrLn $ unlines $ showWarningsPretty "" $ ignore \\ res
+            putStrLn "EXTRA WARNINGS"
+            putStrLn $ unlines $ showWarningsPretty "" $ res \\ ignore
+            return Bad
      else
         return $ if null res then Good else Bad

@@ -52,18 +52,20 @@ instance Monoid Cabal where
     mempty = Cabal "" []
     mappend (Cabal x1 x2) (Cabal y1 y2) = Cabal (x1?:y1) (x2++y2)
 
-data CabalSectionType = Library | Executable String | TestSuite String
+data CabalSectionType = Library | Executable String | TestSuite String | Benchmark String
     deriving (Eq,Ord)
 
 cabalSectionTypeName :: CabalSectionType -> Maybe String
 cabalSectionTypeName Library = Nothing
 cabalSectionTypeName (Executable x) = Just x
 cabalSectionTypeName (TestSuite x) = Just x
+cabalSectionTypeName (Benchmark x) = Just x
 
 instance Show CabalSectionType where
     show Library = "library"
     show (Executable x) = "exe:" ++ x
     show (TestSuite x) = "test:" ++ x
+    show (Benchmark x) = "bench:" ++ x
 
 data CabalSection = CabalSection
     {cabalSectionType :: CabalSectionType
@@ -93,6 +95,7 @@ parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
             "library" -> mempty{cabalSections=[parseSection Library xs]}
             "executable" -> mempty{cabalSections=[parseSection (Executable name) xs]}
             "test-suite" -> mempty{cabalSections=[parseSection (TestSuite name) xs]}
+            "benchmark" -> mempty{cabalSections=[parseSection (Benchmark name) xs]}
             _ -> mempty
 
 parseSection typ xs =

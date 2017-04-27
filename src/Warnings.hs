@@ -86,7 +86,7 @@ warnUnusedExport S{..} =
         unionsWith f = foldr (Map.unionWith f) Map.empty
         -- important: for an identifer to be unused, it must be unused in all sections that use that key
         unused = unionsWith (\(s1,i1) (s2,i2) -> (s1++s2, i1 `Set.intersection` i2))
-                 [ Map.fromList [(k, ([cabalSectionType], Set.fromList $ Map.lookupDefault [] (hiModuleName $ hi k) bad)) | k <- internal]
+                 [ Map.fromList [(k, ([cabalSectionType], Set.fromList $ Map.lookupDefault [] (hiModuleName $ hi k) bad)) | k <- internal ++ external]
                  | (CabalSection{..}, (external, internal)) <- sections
                  , let bad = Map.fromListWith (++) $ map (identModule &&& pure . identName) $ notUsedOrExposed (map hi external) (map hi internal)]
 

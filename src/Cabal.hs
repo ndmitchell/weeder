@@ -62,8 +62,8 @@ cabalSectionTypeName (TestSuite x) = Just x
 
 instance Show CabalSectionType where
     show Library = "library"
-    show (Executable x) = "executable " ++ x
-    show (TestSuite x) = "test-suite " ++ x
+    show (Executable x) = "exe:" ++ x
+    show (TestSuite x) = "test:" ++ x
 
 data CabalSection = CabalSection
     {cabalSectionType :: CabalSectionType

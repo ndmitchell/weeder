@@ -67,6 +67,14 @@ instance Show CabalSectionType where
     show (TestSuite x) = "test:" ++ x
     show (Benchmark x) = "bench:" ++ x
 
+instance Read CabalSectionType where
+    readsPrec _ "library" = [(Library,"")]
+    readsPrec _ x
+        | Just x <- stripPrefix "exe:" x = [(Executable x, "")]
+        | Just x <- stripPrefix "test:" x = [(TestSuite x, "")]
+        | Just x <- stripPrefix "bench:" x = [(Benchmark x, "")]
+    readsPrec _ _ = []
+
 data CabalSection = CabalSection
     {cabalSectionType :: CabalSectionType
     ,cabalMainIs :: FilePath

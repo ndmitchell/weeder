@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
 
 module Warning(
     Warning(..),
@@ -115,7 +115,7 @@ readWarningsFile file = do
     return $ map warningUnpath $ concatMap (f warningLabels) $ valueToVal x
     where
         f :: [String] -> Val -> [[String]]
-        f names (End sect ns) = concatMap (f names) $ map (\n -> Val sect n []) ns
+        f names (End sect ns) = concatMap (\n -> f names $ Val sect n []) ns
         f (name:names) val@(Val sect n xs)
             | sect == name = if null xs
                 then [n : replicate (length names) ""]

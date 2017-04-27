@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards, NamedFieldPuns, ScopedTypeVariables #-}
 
 module Check(check) where
 

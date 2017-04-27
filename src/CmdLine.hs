@@ -16,6 +16,7 @@ data Cmd = Cmd
     ,cmdTest :: Bool
     ,cmdMatch :: Bool
     ,cmdJson :: Bool
+    ,cmdYaml :: Bool
     ,cmdShowAll :: Bool
     } deriving (Show, Data, Typeable)
 
@@ -35,6 +36,7 @@ mode = cmdArgsMode $ Cmd
     ,cmdTest = nam "test" &= help "Run the test suite"
     ,cmdMatch = nam "match" &= help "Make the .weeder.yaml perfectly match"
     ,cmdJson = nam "json" &= help "Output JSON"
+    ,cmdYaml = nam "yaml" &= help "Output YAML"
     ,cmdShowAll = nam "show-all" &= help "Show even ignored warnings"
     } &= explicit &= name "weeder" &= verbosity
     &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017")

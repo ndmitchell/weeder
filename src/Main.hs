@@ -20,15 +20,16 @@ import CmdLine
 import Prelude
 
 
+data Result = Good | Bad deriving Eq
 
 main :: IO ()
 main = do
     cmd@Cmd{..} <- getCmd
-    errs <- fmap sum $ mapM (weedDirectory cmd) cmdProjects
-    when (errs > 0) exitFailure
+    res <- mapM (weedDirectory cmd) cmdProjects
+    when (Bad `elem` res) exitFailure
 
 
-weedDirectory :: Cmd -> FilePath -> IO Int
+weedDirectory :: Cmd -> FilePath -> IO Result
 weedDirectory Cmd{..} dir = do
     file <- do b <- doesDirectoryExist dir; return $ if b then dir </> "stack.yaml" else dir
     when cmdBuild $ buildStack file
@@ -36,6 +37,11 @@ weedDirectory Cmd{..} dir = do
     cabals <- forM stackPackages $ \x -> do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file
+
+    ignore <- do
+        let x = takeDirectory file </> ".weeder.yaml"
+        b <- doesFileExist x
+        if not b then return [] else readWarningsFile x
 
     res <- concatForM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
@@ -46,4 +52,9 @@ weedDirectory Cmd{..} dir = do
 
     when cmdJson $ putStrLn $ showWarningsJson res
     when cmdYaml $ putStrLn $ showWarningsYaml res
-    return $ length res
+    if cmdMatch then
+        if sort ignore == sort res
+        then putStrLn "Warnings match" >> return Good
+        else putStrLn "ERROR: Warnings do not match" >> return Bad
+     else
+        return $ if null res then Good else Bad

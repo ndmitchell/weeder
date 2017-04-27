@@ -1,0 +1,50 @@
+- package:
+  - name: bar
+  - section:
+    - name: library exe:bar
+    - message:
+      - name: Module reused between components
+      - module:
+        - Internal
+        - Library
+- package:
+  - name: foo
+  - section:
+    - name: exe:foo
+    - message:
+      - name: Redundant build-depends entry
+      - depends: process
+  - section:
+    - name: library
+    - message:
+      - name: Excessive other-modules entry
+      - module:
+        - Dir.Reuse
+        - Dir.Unused
+    - message:
+      - name: Missing other-modules entry
+      - module: Dir.Used
+    - message:
+      - name: Redundant build-depends entry
+      - depends:
+        - cmdargs
+        - process
+    - message:
+      - name: Weeds exported
+      - module:
+        - name: Dir.Everything
+        - identifier:
+          - ==~==
+          - Ctor2
+          - Type
+          - unusedFunction
+          - usedFunction2
+      - module:
+        - name: Dir.Reexport
+        - identifier: reexport3
+      - module:
+        - name: Dir.Reuse
+        - identifier: reused
+      - module:
+        - name: Dir.Unused
+        - identifier: unused

@@ -61,8 +61,7 @@ instance Monoid Hi where
 -- * Field selectors that aren't used but where the constructor is used (handy documentation).
 hiExportIdentUnsupported :: Hi -> Set.HashSet Ident
 hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Set.difference` hiFieldName
-    where supported = Set.unions [v | (k,v) <- Map.toList hiSignatures, k `Set.member` names]
-          names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
+    where supported = Set.unions $ Map.elems hiSignatures
 
 -- | Don't expose that we're just using the filename internally
 newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)
@@ -72,12 +71,17 @@ hiParseDirectory dir = do
     files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
     his <- forM files $ \file -> do
         src <- readFile' file
-        return (drop (length dir + 1) file, hiParseContents src)
+        return (drop (length dir + 1) file, trimSignatures $ hiParseContents src)
+    -- here we try and dedupe any identical Hi modules
     let keys = Map.fromList $ map (second HiKey . swap) his
     let mp1 = Map.fromList $ map (second (keys Map.!)) his
     let mp2 = Map.fromList $ map swap $ Map.toList keys
     return (mp1, mp2)
 
+-- note that in some cases we may get more/less internal signatures, so first remove them
+trimSignatures :: Hi -> Hi
+trimSignatures hi@Hi{..} = hi{hiSignatures = Map.filterWithKey (\k _ -> k `Set.member` names) hiSignatures}
+    where names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
 hiParseContents :: String -> Hi
 hiParseContents = mconcat . map f . parseHanging .  lines

@@ -1,48 +1,34 @@
-= Weeding foo =
-No modules reused between components
+= Project foo =
+== Section executable foo ==
+Redundant build-depends entry
+* process
 
-== Weeding foo, library ==
-Redundant build-depends entries:
-  cmdargs
-  process
-Missing other-modules entries:
-  Dir.Used
-Excessive other-modules entries:
-  Dir.Reuse
-  Dir.Unused
-Weeds exported from Dir.Everything
-  ==~==
-  Ctor2
-  Type
-  unusedFunction
-  usedFunction2
-Weeds exported from Dir.Reexport
-  reexport3
-Weeds exported from Dir.Reuse
-  reused
-Weeds exported from Dir.Unused
-  unused
+== Section library ==
+Excessive other-modules entry
+* Dir.Reuse
+* Dir.Unused
+Missing other-modules entry
+* Dir.Used
+Redundant build-depends entry
+* cmdargs
+* process
+Weeds exported
+* Dir.Everything
+  - ==~==
+  - Ctor2
+  - Type
+  - unusedFunction
+  - usedFunction2
+* Dir.Reexport
+  - reexport3
+* Dir.Reuse
+  - reused
+* Dir.Unused
+  - unused
 
-== Weeding foo, executable foo ==
-Redundant build-depends entries:
-  process
-No weeds in the other-modules field
-No weeds in the module exports
-
-= Weeding bar =
-Reused between library, executable bar
-  Internal
-  Library
-
-== Weeding bar, library ==
-No weeds in the build-depends field
-No weeds in the other-modules field
-Weeds exported from Internal
-  internalMain
-
-== Weeding bar, executable bar ==
-No weeds in the build-depends field
-No weeds in the other-modules field
-Weeds exported from Internal
-  internalDirect
+= Project bar =
+== Section library,executable bar ==
+Module reused between two components
+* Internal
+* Library
 

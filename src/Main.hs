@@ -71,8 +71,7 @@ weedDirectory dir = do
             putStr $ unlines xs
 
     forM_ cabals $ \(cabalFile, cabal@Cabal{..}) -> do
-        let distDir = takeDirectory cabalFile </> stackDistDir
-        (fileToKey, keyToHi) <- hiParseDirectory distDir
+        (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         putStrLn $ "= Weeding " ++ cabalName ++ " ="
         cabalSections <- return $ map (id &&& selectHiFiles fileToKey) cabalSections
 

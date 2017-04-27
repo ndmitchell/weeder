@@ -26,7 +26,7 @@ data Warning = Warning
 
 warningPath :: Warning -> [String]
 warningPath Warning{..} =
-    [intercalate ", " $ map show warningSections
+    [unwords $ map show warningSections
     ,warningMessage] ++
     catMaybes [warningPackage, warningModule, warningIdentifier]
 

@@ -8,6 +8,8 @@ module CmdLine(
 import System.Console.CmdArgs.Implicit
 import Paths_weeder
 import Data.Version
+import Data.Functor
+import Prelude
 
 
 data Cmd = Cmd

@@ -66,7 +66,7 @@ warnUnusedExport S{..} =
         unused = unionsWith (\(s1,i1) (s2,i2) -> (s1++s2, i1 `Set.intersection` i2))
                  [ Map.fromList [(k, ([cabalSectionType], Set.fromList $ Map.lookupDefault [] (hiModuleName $ hi k) bad)) | k <- internal ++ external]
                  | (CabalSection{..}, (external, internal)) <- sections
-                 , let bad = Map.fromListWith (++) $ map (identModule &&& pure . identName) $ notUsedOrExposed (map hi external) (map hi internal)]
+                 , let bad = Map.fromListWith (++) $ map (identModule &&& return . identName) $ notUsedOrExposed (map hi external) (map hi internal)]
 
 notUsedOrExposed :: [Hi] -> [Hi] -> [Ident]
 notUsedOrExposed external internal = Set.toList $ privateAPI `Set.difference` Set.union publicAPI usedAnywhere

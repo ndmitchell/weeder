@@ -45,7 +45,10 @@ weedDirectory Cmd{..} dir = do
 
     res <- concatForM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
-        let warn = check (keyToHi Map.!) cabalName $ map (id &&& selectHiFiles fileToKey) cabalSections
+        let warn =
+                (if cmdShowAll || cmdMatch then id else ignoreWarnings ignore) $
+                check (keyToHi Map.!) cabalName $
+                map (id &&& selectHiFiles fileToKey) cabalSections
         unless (cmdJson || cmdYaml) $
             putStrLn $ unlines $ showWarningsPretty cabalName warn
         return warn

@@ -6,7 +6,7 @@ module Warning(
     showWarningsYaml,
     showWarningsJson,
     readWarningsFile,
---    ignoreWarnings
+    ignoreWarnings
     ) where
 
 import Cabal
@@ -121,3 +121,11 @@ readWarningsFile file = do
                 then [n : replicate (length names) ""]
                 else map (n:) $ concatMap (f names) xs
             | otherwise = map ("":) $ f names val
+
+
+-- | Ignore all found warnings that are covered by a template
+ignoreWarnings :: [Warning] -> [Warning] -> [Warning]
+ignoreWarnings template = filter (\x -> not $ any (`match` x) template)
+    where
+        unpack = map (fromMaybe "") . warningPath
+        match template found = and $ zipWith (\t f -> t == "" || t == f) (unpack template) (unpack found)

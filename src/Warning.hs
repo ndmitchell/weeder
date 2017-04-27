@@ -51,20 +51,26 @@ warningTree (f:fs) xs = concat
 
 -- (section, name, children)
 data Val = Val String String [Val]
+         | End String [String]
 
 val :: [Val] -> Value
 val = Array . V.fromList . map f
-    where f (Val sect name xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $
-              Object (Map.singleton (T.pack "name") (String $ T.pack name)) : map f xs
+    where
+        f (Val sect name xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $
+            Object (Map.singleton (T.pack "name") (String $ T.pack name)) : map f xs
+        f (End sect [x]) = Object $ Map.singleton (T.pack sect) $ String $ T.pack x
+        f (End sect xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $ map (String . T.pack) xs
 
 showWarningsValue :: [(PackageName, [Warning])] -> Value
 showWarningsValue xs = val $ f ["package","section","message","package","module","identifier",""]
-    [Just p : dropWhileEnd isJust (warningPath x) | (p,xs) <- xs, x <- xs]
+    [Just p : dropWhileEnd isNothing (warningPath x) | (p,xs) <- xs, x <- xs]
     where
-        f (name:names) xs = concat
+        f (name:names) xs
+            | all (\x -> length x <= 1) xs = [End name $ sort [x | [Just x] <- xs]]
+            | otherwise = concat
                 [ case a of
-                      Nothing -> f names b
-                      Just a -> [Val name a $ f names b]
+                    Nothing -> f names b
+                    Just a -> [Val name a $ f names b]
                 | (a,b) <- groupSort $ mapMaybe uncons xs]
 
 showWarningsJson :: [(PackageName, [Warning])] -> String

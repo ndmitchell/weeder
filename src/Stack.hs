@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
-module Stack(Stack(..), parseStack) where
+module Stack(Stack(..), parseStack, buildStack) where
 
 import Data.Yaml
 import Data.List.Extra
@@ -17,6 +17,9 @@ data Stack = Stack
     {stackPackages :: [FilePath]
     ,stackDistDir :: FilePath
     }
+
+buildStack :: FilePath -> IO ()
+buildStack file = callProcess "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks"]
 
 -- | Note that in addition to parsing the stack.yaml file it also runs @stack@ to
 --   compute the dist-dir.

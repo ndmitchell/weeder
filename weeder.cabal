@@ -34,6 +34,7 @@ executable weeder
         vector,
         hashable,
         filepath,
+        cmdargs,
         process >= 1.2.3.0,
         extra
     other-modules:
@@ -42,3 +43,4 @@ executable weeder
         Stack
         Util
         Warnings
+        CmdLine

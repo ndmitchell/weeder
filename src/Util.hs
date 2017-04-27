@@ -1,6 +1,6 @@
 
 module Util(
-    PackageName, ModuleName,
+    PackageName, ModuleName, IdentName,
     parseHanging,
     (?:),
     isHaskellSymbol,
@@ -19,6 +19,7 @@ import Prelude
 
 type PackageName = String
 type ModuleName = String
+type IdentName = String
 
 
 -- | Return the first non-empty argument in a left-to-right manner

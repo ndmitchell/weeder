@@ -13,12 +13,13 @@ import Warning
 
 
 data S = S
-    {hi :: HiKey -> Hi
+    {pkg :: PackageName
+    ,hi :: HiKey -> Hi
     ,sections :: [(CabalSection, ([HiKey], [HiKey]))]
     }
 
-check :: (HiKey -> Hi) -> [(CabalSection, ([HiKey], [HiKey]))] -> [Warning]
-check hi sections = map (\x -> x{warningSections = sort $ warningSections x}) $
+check :: (HiKey -> Hi) -> PackageName -> [(CabalSection, ([HiKey], [HiKey]))] -> [Warning]
+check hi pkg sections = map (\x -> x{warningSections = sort $ warningSections x}) $
     warnReusedModuleBetweenSections s ++
     warnRedundantPackageDependency s ++
     warnIncorrectOtherModules s ++
@@ -28,15 +29,14 @@ check hi sections = map (\x -> x{warningSections = sort $ warningSections x}) $
 
 warnReusedModuleBetweenSections :: S -> [Warning]
 warnReusedModuleBetweenSections S{..} =
-    [ Warning "Module reused between components" ss Nothing (Just $ hiModuleName $ hi m) Nothing
+    [ Warning pkg ss "Module reused between components" Nothing (Just $ hiModuleName $ hi m) Nothing
     | (m, ss) <- groupSort [(x, cabalSectionType c) | (c, (x1,x2)) <- sections, x <- x1++x2]
     , length ss > 1]
 
 
 warnRedundantPackageDependency :: S -> [Warning]
 warnRedundantPackageDependency S{..} =
-    [ Warning "Redundant build-depends entry"
-        [cabalSectionType] (Just p) Nothing Nothing
+    [ Warning pkg [cabalSectionType] "Redundant build-depends entry" (Just p) Nothing Nothing
     | (CabalSection{..}, (x1,x2)) <- sections
     , let usedPackages = Set.unions $ map (hiImportPackage . hi) $ x1 ++ x2
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages]
@@ -44,8 +44,8 @@ warnRedundantPackageDependency S{..} =
 
 warnIncorrectOtherModules :: S -> [Warning]
 warnIncorrectOtherModules S{..} = concat
-    [ [Warning "Missing other-modules entry" [cabalSectionType] Nothing (Just m) Nothing | m <- Set.toList missing] ++
-      [Warning "Excessive other-modules entry" [cabalSectionType] Nothing (Just m) Nothing | m <- Set.toList excessive]
+    [ [Warning pkg [cabalSectionType] "Missing other-modules entry" Nothing (Just m) Nothing | m <- Set.toList missing] ++
+      [Warning pkg [cabalSectionType] "Excessive other-modules entry" Nothing (Just m) Nothing | m <- Set.toList excessive]
     | (CabalSection{..}, (external, internal)) <- sections
     , let imports = Map.fromList [(hiModuleName, Set.map identModule hiImportIdent) | Hi{..} <- map hi $ external ++ internal]
     , let missing =  Set.filter (not . isPathsModule) $
@@ -58,7 +58,7 @@ warnIncorrectOtherModules S{..} = concat
 
 warnUnusedExport :: S -> [Warning]
 warnUnusedExport S{..} =
-    [ Warning "Weeds exported" ss Nothing (Just $ hiModuleName $ hi m) (Just i)
+    [ Warning pkg ss "Weeds exported" Nothing (Just $ hiModuleName $ hi m) (Just i)
     | (m,(ss,is)) <- Map.toList unused, i <- Set.toList is]
     where
         unionsWith f = foldr (Map.unionWith f) Map.empty

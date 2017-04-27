@@ -23,25 +23,27 @@ import qualified Data.ByteString.Lazy.Char8 as LBS
 
 
 data Warning = Warning
-    {warningMessage :: String
+    {warningPackage :: String
     ,warningSections :: [CabalSectionType]
-    ,warningPackage :: Maybe PackageName
+    ,warningMessage :: String
+    ,warningDepends :: Maybe PackageName
     ,warningModule :: Maybe ModuleName
     ,warningIdentifier :: Maybe IdentName
     } deriving Show
 
 warningPath :: Warning -> [Maybe String]
 warningPath Warning{..} =
-    [Just $ unwords $ map show warningSections
-    ,Just $ warningMessage
-    ,warningPackage
+    [Just warningPackage
+    ,Just $ unwords $ map show warningSections
+    ,Just warningMessage
+    ,warningDepends
     ,warningModule
     ,warningIdentifier]
 
 showWarningsPretty :: [Warning] -> [String]
 showWarningsPretty [] = ["No warnings"]
-showWarningsPretty warn = (\(x:xs) -> tail x:xs) $ warningTree
-    ([\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
+showWarningsPretty warn = warningTree
+    ([\x -> "= Package " ++ x ++ " =",\x -> "\n== Section " ++ x ++ " ==",id,("* "++),("  - "++)] ++ repeat id) $
     map (catMaybes . warningPath) warn
 
 warningTree :: Ord a => [a -> a] -> [[a]] -> [a]
@@ -61,9 +63,9 @@ val = Array . V.fromList . map f
         f (End sect [x]) = Object $ Map.singleton (T.pack sect) $ String $ T.pack x
         f (End sect xs) = Object $ Map.singleton (T.pack sect) $ Array $ V.fromList $ map (String . T.pack) xs
 
-showWarningsValue :: [(PackageName, [Warning])] -> Value
-showWarningsValue xs = val $ f ["package","section","message","package","module","identifier",""]
-    [Just p : dropWhileEnd isNothing (warningPath x) | (p,xs) <- xs, x <- xs]
+showWarningsValue :: [Warning] -> Value
+showWarningsValue = val . f ["package","section","message","depends","module","identifier",""] .
+    map (dropWhileEnd isNothing . warningPath)
     where
         f (name:names) xs
             | all (\x -> length x <= 1) xs = [End name $ sort [x | [Just x] <- xs]]
@@ -73,8 +75,8 @@ showWarningsValue xs = val $ f ["package","section","message","package","module"
                     Just a -> [Val name a $ f names b]
                 | (a,b) <- groupSort $ mapMaybe uncons xs]
 
-showWarningsJson :: [(PackageName, [Warning])] -> String
+showWarningsJson :: [Warning] -> String
 showWarningsJson = LBS.unpack . JSON.encode . showWarningsValue
 
-showWarningsYaml :: [(PackageName, [Warning])] -> String
+showWarningsYaml :: [Warning] -> String
 showWarningsYaml = BS.unpack . Yaml.encode . showWarningsValue

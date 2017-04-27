@@ -8,7 +8,7 @@ import Stack
 import Data.List.Extra
 import Data.Functor
 import Data.Tuple.Extra
-import Control.Monad
+import Control.Monad.Extra
 import System.Exit
 import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
@@ -37,13 +37,13 @@ weedDirectory Cmd{..} dir = do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file
 
-    res <- forM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
+    res <- concatForM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
-        let warn = check (keyToHi Map.!) $ map (id &&& selectHiFiles fileToKey) cabalSections
+        let warn = check (keyToHi Map.!) cabalName $ map (id &&& selectHiFiles fileToKey) cabalSections
         unless (cmdJson || cmdYaml) $
-            putStrLn $ unlines $ ("= Project " ++ cabalName ++ " =") : showWarningsPretty warn
-        return (cabalName, warn)
+            putStrLn $ unlines $ showWarningsPretty warn
+        return warn
 
     when cmdJson $ putStrLn $ showWarningsJson res
     when cmdYaml $ putStrLn $ showWarningsYaml res
-    return $ sum $ map (length . snd) res
+    return $ length res

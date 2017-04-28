@@ -26,4 +26,6 @@ data Data
     = Ctor1 {field1 :: Int, field2 :: Int, field3 :: Int}
     | Ctor2 String
 
+supportData = Ctor1
+
 type Type = Data

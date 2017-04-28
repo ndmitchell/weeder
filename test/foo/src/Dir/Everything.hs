@@ -16,6 +16,9 @@ data D1 = D1 {d1 :: Int}
 data D2 = D2 {d2 :: Int}
 data D3 = D3 {d3 :: Int}
 data D4 = D4 {d4 :: Int}
+data D5 = D5_ {d5 :: Int}
+data D6 = D6_ Int
+data D7 = D7 Int
 
 type T1 = D1
 type T2 = D2

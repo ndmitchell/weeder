@@ -2,7 +2,6 @@
 
 module Hi(
     HiKey(), Hi(..), Ident(..),
-    hiExportIdentUnsupported,
     hiParseDirectory
     ) where
 
@@ -53,15 +52,6 @@ instance Monoid Hi where
         ,hiFieldName = f (<>) hiFieldName
         }
         where f op sel = sel x `op` sel y
-
-
--- | Things that are exported and aren't of use if they aren't used. Don't worry about:
---
--- * Types that are exported and used in a definition that is exported.
--- * Field selectors that aren't used but where the constructor is used (handy documentation).
-hiExportIdentUnsupported :: Hi -> Set.HashSet Ident
-hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Set.difference` hiFieldName
-    where supported = Set.unions $ Map.elems hiSignatures
 
 -- | Don't expose that we're just using the filename internally
 newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)

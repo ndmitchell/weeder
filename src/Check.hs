@@ -88,3 +88,12 @@ notUsedOrExposed external internal = Set.toList $ privateAPI `Set.difference` Se
 
         -- things that are used anywhere, if someone imports and exports something assume that isn't also a use (find some redundant warnings)
         usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
+
+
+-- | Things that are exported and aren't of use if they aren't used. Don't worry about:
+--
+-- * Types that are exported and used in a definition that is exported.
+-- * Field selectors that aren't used but where the constructor is used (handy documentation).
+hiExportIdentUnsupported :: Hi -> Set.HashSet Ident
+hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Set.difference` hiFieldName
+    where supported = Set.unions $ Map.elems hiSignatures

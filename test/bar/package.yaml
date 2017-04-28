@@ -8,4 +8,4 @@ library:
 executables:
     bar:
         main: Main
-        other-modules: [Library,Internal]
+        source-dirs: .

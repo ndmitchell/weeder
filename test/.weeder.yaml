@@ -1,6 +1,11 @@
 - package:
   - name: bar
   - section:
+    - name: exe:bar
+    - message:
+      - name: Module not compiled
+      - module: Redundant
+  - section:
     - name: library exe:bar
     - message:
       - name: Module reused between components

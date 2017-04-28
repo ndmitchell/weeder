@@ -18,6 +18,7 @@ data D3 = D3 {d3 :: Int}
 data D4 = D4 {d4 :: Int}
 
 type T1 = D1
+type T2 = D2
 
 data Other = Other
 

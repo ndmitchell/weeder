@@ -102,9 +102,9 @@ hiParseContents = mconcat . map f . parseHanging .  lines
         parseExports x = mempty
             {hiExportIdent = Set.fromList $ y : [Ident (a ?: identModule y) b | Ident a b <- ys]
             ,hiFieldName = Set.fromList [Ident (identModule y) b | Ident "" b <- ys]
-            ,hiSignatures = Map.fromList [(b, Set.singleton y) | Ident _ b <- ys]
+            ,hiSignatures = Map.fromList [(b, Set.singleton y) | Ident _ b <- ys, b /= identName y]
             }
-            where y:ys = map parseIdent $ wordsBy (`elem` "{} ") x
+            where y:ys = map parseIdent $ wordsBy (`elem` "|{} ") x
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"
         parseIdent x

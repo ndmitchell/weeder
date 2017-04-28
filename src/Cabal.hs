@@ -15,6 +15,7 @@ import Util
 import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
+import Data.Either.Extra
 import Data.Monoid
 import Prelude
 
@@ -27,17 +28,19 @@ selectCabalFile dir = do
         _ -> fail $ "Didn't find exactly 1 cabal file in " ++ dir
 
 -- | Return the (exposed Hi files, internal Hi files)
-selectHiFiles :: Map.HashMap FilePath a -> CabalSection -> ([a], [a])
-selectHiFiles his sect@CabalSection{..} = (external, internal)
+selectHiFiles :: Map.HashMap FilePath a -> CabalSection -> ([a], [a], [ModuleName])
+selectHiFiles his sect@CabalSection{..} = (external, internal, bad1++bad2)
     where
-        external = [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
-                   [findHi his sect $ Right x | x <- cabalExposedModules]
-        internal = [findHi his sect $ Right x | x <- filter (not . isPathsModule) cabalOtherModules]
+        (bad1, external) = partitionEithers $
+            [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
+            [findHi his sect $ Right x | x <- cabalExposedModules]
+        (bad2, internal) = partitionEithers
+            [findHi his sect $ Right x | x <- filter (not . isPathsModule) cabalOtherModules]
 
-        findHi :: Map.HashMap FilePath a -> CabalSection -> Either FilePath ModuleName -> a
-        findHi his cabal@CabalSection{..} name = fromMaybe err $ firstJust (`Map.lookup` his) poss
+        findHi :: Map.HashMap FilePath a -> CabalSection -> Either FilePath ModuleName -> Either ModuleName a
+        findHi his cabal@CabalSection{..} name = maybe (Left mname) Right $ firstJust (`Map.lookup` his) poss
             where
-                err = error $ "Failed to find Hi file when looking for " ++ show name ++ " " ++ show (Map.keys his, poss)
+                mname = either takeFileName id name
                 poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
                     | root <- ["build" </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++ ["build"]
                     , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]

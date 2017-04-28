@@ -18,13 +18,22 @@ data S = S
     ,sections :: [(CabalSection, ([HiKey], [HiKey]))]
     }
 
-check :: (HiKey -> Hi) -> PackageName -> [(CabalSection, ([HiKey], [HiKey]))] -> [Warning]
-check hi pkg sections = map (\x -> x{warningSections = sort $ warningSections x}) $
+check :: (HiKey -> Hi) -> PackageName -> [(CabalSection, ([HiKey], [HiKey], [ModuleName]))] -> [Warning]
+check hi pkg sections2 = map (\x -> x{warningSections = sort $ warningSections x}) $
     warnReusedModuleBetweenSections s ++
     warnRedundantPackageDependency s ++
     warnIncorrectOtherModules s ++
-    warnUnusedExport s
-    where s = S{..}
+    warnUnusedExport s ++
+    warnNotCompiled pkg sections2
+    where
+        s = S{..}
+        sections = map (second $ \(a,b,c) -> let aa = nubOrd a in (aa,nubOrd b \\ aa)) sections2
+
+
+warnNotCompiled :: PackageName -> [(CabalSection, ([HiKey], [HiKey], [ModuleName]))] -> [Warning]
+warnNotCompiled pkg xs =
+    [ Warning pkg [cabalSectionType s] "Module not compiled" Nothing (Just m) Nothing
+    | (s, (_, _, missing)) <- xs, m <- missing]
 
 
 warnReusedModuleBetweenSections :: S -> [Warning]

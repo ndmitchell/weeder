@@ -6,10 +6,4 @@ The principle is to delete dead code (pulling up the weeds). To do that, run:
 * [HLint](https://github.com/ndmitchell/hlint#readme), looking for "Redundant extension" hints, which finds unused extensions.
 * This tool, `weeder .` which detects redundant `build-depends` in the `.cabal` and functions that are exported internally but not available outside this library.
 
-Caveats:
-
-* For `build-depends`, the list of unused packages should be accurate. It will not report packages that are unused but declared to only be required in certain configurations. It will not report packages that are declared used but only used via transitive dependencies of used dependencies.
-* For unused exported things, it may be incorrect if:
-  * The type is exported, not used, but has functions which have that type. (Technically this is unused, but I wouldn't encourage deleting such types.)
-  * It is only used in modules from which it is reexported.
-  * It is used in some modules which aren't exposed.
+To use `weeder` your code must be building with `stack`, as it piggy-backs off some files `stack` generates.

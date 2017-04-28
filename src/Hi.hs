@@ -95,9 +95,9 @@ hiParseContents = mconcat . map f . parseHanging .  lines
                 xs -> mempty{hiImportIdent = Set.fromList $ map (Ident (words x !! 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | length x == 32, all isHexDigit x,
                 (y,ys):_ <- parseHanging xs,
-                fun:"::":typ <- concatMap (wordsBy (`elem` ",[]{} ")) $ y:ys,
+                fun:"::":typ <- concatMap (wordsBy (`elem` ",()[]{} ")) $ y:ys,
                 not $ "$" `isPrefixOf` fun =
-                mempty{hiSignatures = Map.singleton (unbracket fun) $ Set.fromList $ map parseIdent typ}
+                mempty{hiSignatures = Map.singleton fun $ Set.fromList $ map parseIdent typ}
             | otherwise = mempty
 
         -- "old-locale-1.0.0.7@old-locale-1.0.0.7-KGBP1BSKxH5GCm0LnZP04j" -> "old-locale"
@@ -124,7 +124,3 @@ hiParseContents = mconcat . map f . parseHanging .  lines
             | otherwise =
                 let (a,b) = breakOnEnd "." x
                 in Ident (if null a then "" else init a) b
-
-unbracket :: String -> String
-unbracket ('(':x) | Just x <- stripSuffix ")" x = x
-unbracket x = x

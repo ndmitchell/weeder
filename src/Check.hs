@@ -89,7 +89,7 @@ notUsedOrExposed external internal = Set.toList $
         -- Types that are required to define things that are public
         supported = Set.unions
             [ Map.lookupDefault Set.empty x hiSignatures
-            | (m, xs) <- groupSort $ map (identModule &&& identName) $ Set.toList publicAPI
+            | (m, xs) <- groupSort $ map (identModule &&& identName) $ Set.toList $ Set.union publicAPI usedAnywhere
             , Just Hi{..} <- [Map.lookup m modules], x <- xs]
 
         -- things that are defined in other modules and exported

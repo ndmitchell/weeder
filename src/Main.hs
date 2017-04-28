@@ -42,28 +42,31 @@ weedDirectory Cmd{..} dir = do
         let x = takeDirectory file </> ".weeder.yaml"
         b <- doesFileExist x
         if not b then return [] else readWarningsFile x
+    let quiet = cmdJson || cmdYaml
 
-    res <- concatForM cabals $ \(cabalFile, Cabal{..}) -> do
+    res <- forM cabals $ \(cabalFile, Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
-        let warn =
-                (if cmdShowAll || cmdMatch then id else ignoreWarnings ignore) $
-                check (keyToHi Map.!) cabalName $
-                map (id &&& selectHiFiles fileToKey) cabalSections
-        unless (cmdJson || cmdYaml) $
+        let full = check (keyToHi Map.!) cabalName $
+                   map (id &&& selectHiFiles fileToKey) cabalSections
+        let warn = if cmdShowAll || cmdMatch then full else ignoreWarnings ignore full
+        unless quiet $
             putStrLn $ unlines $ showWarningsPretty cabalName warn
-        return warn
+        return (length full - length warn, warn)
+    let (ignored, warns) = sum *** concat $ unzip res
 
-    when cmdJson $ putStrLn $ showWarningsJson res
-    when cmdYaml $ putStrLn $ showWarningsYaml res
+    when cmdJson $ putStrLn $ showWarningsJson warns
+    when cmdYaml $ putStrLn $ showWarningsYaml warns
     if cmdMatch then
-        if sort ignore == sort res then do
+        if sort ignore == sort warns then do
             putStrLn "Warnings match"
             return Good
         else do
             putStrLn "MISSING WARNINGS"
-            putStrLn $ unlines $ showWarningsPretty "" $ ignore \\ res
+            putStrLn $ unlines $ showWarningsPretty "" $ ignore \\ warns
             putStrLn "EXTRA WARNINGS"
-            putStrLn $ unlines $ showWarningsPretty "" $ res \\ ignore
+            putStrLn $ unlines $ showWarningsPretty "" $ warns \\ ignore
             return Bad
-     else
-        return $ if null res then Good else Bad
+     else do
+        when (ignored > 0 && not quiet) $
+            putStrLn $ "Ignored " ++ show ignored ++ " weeds (pass --show-all to see them)"
+        return $ if null warns then Good else Bad

@@ -43,7 +43,7 @@ weedDirectory Cmd{..} dir = do
         b <- doesFileExist x
         if not b then return [] else readWarningsFile x
 
-    res <- concatForM cabals $ \(cabalFile, cabal@Cabal{..}) -> do
+    res <- concatForM cabals $ \(cabalFile, Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         let warn =
                 (if cmdShowAll || cmdMatch then id else ignoreWarnings ignore) $

@@ -78,22 +78,28 @@ warnUnusedExport S{..} =
                  , let bad = Map.fromListWith (++) $ map (identModule &&& return . identName) $ notUsedOrExposed (map hi external) (map hi internal)]
 
 notUsedOrExposed :: [Hi] -> [Hi] -> [Ident]
-notUsedOrExposed external internal = Set.toList $ privateAPI `Set.difference` Set.union publicAPI usedAnywhere
+notUsedOrExposed external internal = Set.toList $
+        privateAPI `Set.difference` Set.unions [publicAPI,supported,usedAnywhere]
     where
+        modules = Map.fromList [(hiModuleName x, x) | x <- external ++ internal]
+
         -- things exported from this package
         publicAPI = Set.unions $ map hiExportIdent external
 
+        -- Types that are required to define things that are public
+        supported = Set.unions
+            [ Map.lookupDefault Set.empty x hiSignatures
+            | (m, xs) <- groupSort $ map (identModule &&& identName) $ Set.toList publicAPI
+            , Just Hi{..} <- [Map.lookup m modules], x <- xs]
+
         -- things that are defined in other modules and exported
-        privateAPI = Set.unions [Set.filter ((==) hiModuleName . identModule) $ hiExportIdentUnsupported hi | hi@Hi{..} <- internal]
+        -- (ignoring field name since they provide handy documentation)
+        privateAPI = Set.unions
+            [ Set.filter ((==) hiModuleName . identModule) $ hiExportIdent `Set.difference` hiFieldName
+            | Hi{..} <- internal]
 
-        -- things that are used anywhere, if someone imports and exports something assume that isn't also a use (find some redundant warnings)
-        usedAnywhere = Set.unions [hiImportIdent `Set.difference` hiExportIdent | Hi{..} <- external ++ internal]
-
-
--- | Things that are exported and aren't of use if they aren't used. Don't worry about:
---
--- * Types that are exported and used in a definition that is exported.
--- * Field selectors that aren't used but where the constructor is used (handy documentation).
-hiExportIdentUnsupported :: Hi -> Set.HashSet Ident
-hiExportIdentUnsupported Hi{..} = (hiExportIdent `Set.difference` supported) `Set.difference` hiFieldName
-    where supported = Set.unions $ Map.elems hiSignatures
+        -- things that are used anywhere, if someone imports and exports something
+        -- assume that isn't also a use (find some redundant warnings)
+        usedAnywhere = Set.unions
+            [ hiImportIdent `Set.difference` hiExportIdent
+            | Hi{..} <- external ++ internal]

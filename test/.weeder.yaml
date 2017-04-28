@@ -41,6 +41,7 @@
         - identifier:
           - ==~==
           - Ctor2
+          - D4
           - T2
           - Type
           - unusedFunction

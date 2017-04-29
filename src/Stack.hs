@@ -7,7 +7,7 @@ import Data.List.Extra
 import Control.Exception
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
-import qualified Data.Vector as V
+import qualified Data.ByteString.Char8 as BS
 import System.Process
 import Data.Functor
 import Prelude
@@ -26,13 +26,10 @@ buildStack file = callProcess "stack" ["build","--stack-yaml=" ++ file,"--test",
 parseStack :: FilePath -> IO Stack
 parseStack file = do
     stackDistDir <- fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir","--stack-yaml=" ++ file]) ""
-    stackPackages <- either throwIO (return . f) =<< decodeFileEither file
+    stackPackages <- f . decodeYaml <$> readCreateProcess (proc "stack" ["query","locals","--stack-yaml=" ++ file]) ""
     return Stack{..}
     where
+        decodeYaml = either throw id . decodeEither' . BS.pack
         fromObject (Object x) = x
-        fromArray (Array xs) = V.toList xs
         fromString (String s) = T.unpack s
-
-        f x = case Map.lookup "packages" $ fromObject x of
-            Nothing -> ["."]
-            Just xs -> map fromString $ fromArray xs
+        f = map (fromString . (Map.! "path") . fromObject) . Map.elems . fromObject

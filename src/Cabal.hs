@@ -118,7 +118,7 @@ parseSection typ xs =
 
         f (keyValues -> (k,vs)) = case k of
             "build-depends:" -> mempty{cabalPackages = map (trim . takeWhile (`notElem` "=><")) . splitOn "," $ unwords vs}
-            "hs-source-dirs:" -> mempty{cabalSourceDirs=vs}
+            "hs-source-dirs:" -> mempty{cabalSourceDirs=listSplit vs}
             "exposed-modules:" -> mempty{cabalExposedModules=listSplit vs}
             "other-modules:" -> mempty{cabalOtherModules=listSplit vs}
             "main-is:" -> mempty{cabalMainIs=head $ vs ++ [""]}

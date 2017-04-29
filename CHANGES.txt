@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+0.1.1
     #2, use "stack query" rather than parsing stack.yaml
 0.1
     Initial version

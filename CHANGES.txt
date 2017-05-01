@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #6, don't give partial pattern matches when reading .weeder.yaml
 0.1.2
     #3, deal with space-separated hs-source-dirs
 0.1.1

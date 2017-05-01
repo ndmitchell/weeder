@@ -118,7 +118,9 @@ showWarningsYaml = BS.unpack . Yaml.encode . showWarningsValue
 readWarningsFile :: FilePath -> IO [Warning]
 readWarningsFile file = do
     x <- either throwIO return =<< Yaml.decodeFileEither file
-    return $ map warningUnpath $ concatMap (f warningLabels) $ valueToVal x
+    let res = map warningUnpath $ concatMap (f warningLabels) $ valueToVal x
+    mapM_ evaluate res -- ensure exceptions happen immediately
+    return res
     where
         f :: [String] -> Val -> [[String]]
         f names (End sect ns) = concatMap (\n -> f names $ Val sect n []) ns

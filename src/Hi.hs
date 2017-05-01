@@ -34,6 +34,9 @@ data Hi = Hi
         -- ^ Identifiers exported by this module
     ,hiImportIdent :: Set.HashSet Ident
         -- ^ Identifiers used by this module
+    ,hiImportModule :: Set.HashSet ModuleName
+        -- ^ Modules imported and used by this module
+        --   Normally equivalent to @Set.map identModule hiImportIdent@, unless a module supplies only instances
     ,hiSignatures :: Map.HashMap IdentName (Set.HashSet Ident)
         -- ^ Type signatures of functions defined in this module and the types they refer to
     ,hiFieldName :: Set.HashSet Ident
@@ -42,12 +45,13 @@ data Hi = Hi
 instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi mempty mempty mempty mempty mempty mempty
+    mempty = Hi mempty mempty mempty mempty mempty mempty mempty
     mappend x y = Hi
         {hiModuleName = f (?:) hiModuleName
         ,hiImportPackage = f (<>) hiImportPackage
         ,hiExportIdent = f (<>) hiExportIdent
         ,hiImportIdent = f (<>) hiImportIdent
+        ,hiImportModule = f (<>) hiImportModule
         ,hiSignatures = f (Map.unionWith (<>)) hiSignatures
         ,hiFieldName = f (<>) hiFieldName
         }
@@ -82,7 +86,9 @@ hiParseContents = mconcat . map f . parseHanging .  lines
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
-                xs -> mempty{hiImportIdent = Set.fromList $ map (Ident (words x !! 1) . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
+                xs -> let m = words x !! 1 in mempty
+                    {hiImportModule = Set.singleton m
+                    ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | length x == 32, all isHexDigit x,
                 (y,ys):_ <- parseHanging xs,
                 fun:"::":typ <- concatMap (wordsBy (`elem` ",()[]{} ")) $ y:ys,

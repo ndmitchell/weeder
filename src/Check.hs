@@ -56,7 +56,7 @@ warnIncorrectOtherModules S{..} = concat
     [ [Warning pkg [cabalSectionType] "Missing other-modules entry" Nothing (Just m) Nothing | m <- Set.toList missing] ++
       [Warning pkg [cabalSectionType] "Excessive other-modules entry" Nothing (Just m) Nothing | m <- Set.toList excessive]
     | (CabalSection{..}, (external, internal)) <- sections
-    , let imports = Map.fromList [(hiModuleName, Set.map identModule hiImportIdent) | Hi{..} <- map hi $ external ++ internal]
+    , let imports = Map.fromList [(hiModuleName, hiImportModule) | Hi{..} <- map hi $ external ++ internal]
     , let missing =  Set.filter (not . isPathsModule) $
                      Set.unions (Map.elems imports) `Set.difference`
                      Set.fromList (Map.keys imports)

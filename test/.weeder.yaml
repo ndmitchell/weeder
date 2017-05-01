@@ -23,9 +23,7 @@
     - name: library
     - message:
       - name: Excessive other-modules entry
-      - module:
-        - Dir.Reuse
-        - Dir.Unused
+      - module: Dir.Unused
     - message:
       - name: Missing other-modules entry
       - module: Dir.Used

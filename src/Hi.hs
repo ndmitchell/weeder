@@ -37,6 +37,8 @@ data Hi = Hi
     ,hiImportModule :: Set.HashSet ModuleName
         -- ^ Modules imported and used by this module
         --   Normally equivalent to @Set.map identModule hiImportIdent@, unless a module supplies only instances
+    ,hiImportOrphan :: Set.HashSet ModuleName
+        -- ^ Orphans that are in scope in this module
     ,hiSignatures :: Map.HashMap IdentName (Set.HashSet Ident)
         -- ^ Type signatures of functions defined in this module and the types they refer to
     ,hiFieldName :: Set.HashSet Ident
@@ -45,13 +47,14 @@ data Hi = Hi
 instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi mempty mempty mempty mempty mempty mempty mempty
+    mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty
     mappend x y = Hi
         {hiModuleName = f (?:) hiModuleName
         ,hiImportPackage = f (<>) hiImportPackage
         ,hiExportIdent = f (<>) hiExportIdent
         ,hiImportIdent = f (<>) hiImportIdent
         ,hiImportModule = f (<>) hiImportModule
+        ,hiImportOrphan = f (<>) hiImportOrphan
         ,hiSignatures = f (Map.unionWith (<>)) hiSignatures
         ,hiFieldName = f (<>) hiFieldName
         }
@@ -83,6 +86,7 @@ hiParseContents = mconcat . map f . parseHanging .  lines
         f (x,xs)
             | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
             | Just x <- stripPrefix "exports:" x = mconcat $ map parseExports xs
+            | Just x <- stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap words $ x:xs}
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
                 [] -> mempty -- these are imports of modules from another package, we don't know what is actually used

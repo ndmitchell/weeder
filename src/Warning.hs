@@ -64,6 +64,7 @@ warningTree (f:fs) xs = concat
 -- (section, name, children)
 data Val = Val String String [Val]
          | End String [String]
+           deriving Show
 
 valToValue :: [Val] -> Value
 valToValue = Array . V.fromList . map f

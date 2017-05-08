@@ -77,7 +77,8 @@ warnUnusedImport S{..} =
     , imp <- mapMaybe (flip Map.lookup mods) $ Set.toList $
         hiImportModule mod `Set.difference`
         (Set.map identModule (hiImportIdent mod) `Set.union` hiImportOrphan mod)
-    , Set.null $ hiExportIdent imp `Set.intersection` hiImportIdent mod -- reexporting for someone else
+    , Set.null $ hiImportIdent mod `Set.intersection` hiExportIdent imp -- reexporting for someone else
+    , Set.null $ Set.map snd (hiImportPackageModule mod) `Set.intersection` Set.map identModule (hiExportIdent imp) -- reexporting for another package 
     ]
 
 warnUnusedExport :: S -> [Warning]

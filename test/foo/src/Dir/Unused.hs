@@ -1,4 +1,6 @@
 
 module Dir.Unused(unused) where
 
-unused = ()
+import Dir.Everything
+
+unused = trim

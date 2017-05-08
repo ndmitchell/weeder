@@ -128,6 +128,10 @@ readWarningsFile file = do
             | sect == name = if null xs
                 then [n : replicate (length names) ""]
                 else map (n:) $ concatMap (f names) xs
+            | sect `notElem` names = error $
+                "Warnings file " ++ file ++ ", invalid section name:\n" ++
+                "Wanted one of: " ++ show (name:names) ++ "\n" ++
+                "Got: " ++ show sect
             | otherwise = map ("":) $ f names val
 
 

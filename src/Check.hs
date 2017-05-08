@@ -5,6 +5,7 @@ module Check(check) where
 import Hi
 import Cabal
 import Util
+import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
 import qualified Data.HashSet as Set
@@ -24,7 +25,8 @@ check hi pkg sections2 = map (\x -> x{warningSections = sort $ warningSections x
     warnRedundantPackageDependency s ++
     warnIncorrectOtherModules s ++
     warnUnusedExport s ++
-    warnNotCompiled pkg sections2
+    warnNotCompiled pkg sections2 ++
+    warnUnusedImport s
     where
         s = S{..}
         sections = map (second $ \(a,b,c) -> let aa = nubOrd a in (aa,nubOrd b \\ aa)) sections2
@@ -64,6 +66,19 @@ warnIncorrectOtherModules S{..} = concat
                       reachable (\k -> maybe [] Set.toList $ Map.lookup k imports) (map (hiModuleName . hi) external)
     ]
 
+
+-- Primarily looking for import Foo() where Foo is not an orphan
+warnUnusedImport :: S -> [Warning]
+warnUnusedImport S{..} =
+    [ Warning pkg [cabalSectionType] "Unused import" Nothing (Just $ hiModuleName mod) (Just $ hiModuleName imp)
+    | (CabalSection{..}, (external, internal)) <- sections
+    , let mods = Map.fromList $ map ((hiModuleName &&& id) . hi) $ external ++ internal
+    , mod <- Map.elems mods
+    , imp <- mapMaybe (flip Map.lookup mods) $ Set.toList $
+        hiImportModule mod `Set.difference`
+        (Set.map identModule (hiImportIdent mod) `Set.union` hiImportOrphan mod)
+    , Set.null $ hiExportIdent imp `Set.intersection` hiImportIdent mod -- reexporting for someone else
+    ]
 
 warnUnusedExport :: S -> [Warning]
 warnUnusedExport S{..} =

@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    Detect unused imports, even import Foo()
     #7, don't say modules with only instances are always redundant
     #6, don't give partial pattern matches when reading .weeder.yaml
 0.1.2

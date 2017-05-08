@@ -39,6 +39,8 @@ data Hi = Hi
         --   Normally equivalent to @Set.map identModule hiImportIdent@, unless a module supplies only instances
     ,hiImportOrphan :: Set.HashSet ModuleName
         -- ^ Orphans that are in scope in this module
+    ,hiImportPackageModule :: Set.HashSet (PackageName, ModuleName)
+        -- ^ Modules imported from other packages
     ,hiSignatures :: Map.HashMap IdentName (Set.HashSet Ident)
         -- ^ Type signatures of functions defined in this module and the types they refer to
     ,hiFieldName :: Set.HashSet Ident
@@ -47,13 +49,14 @@ data Hi = Hi
 instance Hashable Hi
 
 instance Monoid Hi where
-    mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty
+    mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty mempty
     mappend x y = Hi
         {hiModuleName = f (?:) hiModuleName
         ,hiImportPackage = f (<>) hiImportPackage
         ,hiExportIdent = f (<>) hiExportIdent
         ,hiImportIdent = f (<>) hiImportIdent
         ,hiImportModule = f (<>) hiImportModule
+        ,hiImportPackageModule = f (<>) hiImportPackageModule
         ,hiImportOrphan = f (<>) hiImportOrphan
         ,hiSignatures = f (Map.unionWith (<>)) hiSignatures
         ,hiFieldName = f (<>) hiFieldName
@@ -89,7 +92,8 @@ hiParseContents = mconcat . map f . parseHanging .  lines
             | Just x <- stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap words $ x:xs}
             | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
             | Just x <- stripPrefix "import " x = case xs of
-                [] -> mempty -- these are imports of modules from another package, we don't know what is actually used
+                [] | (pkg, mod) <- breakOn ":" $ words x !! 1 -> mempty
+                    {hiImportPackageModule = Set.singleton (takeWhile (/= '@') pkg, drop 1 mod)}
                 xs -> let m = words x !! 1 in mempty
                     {hiImportModule = Set.singleton m
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}

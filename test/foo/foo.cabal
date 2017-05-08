@@ -12,6 +12,7 @@ library
         Dir.Library2
     other-modules:
         Dir.Everything
+        Dir.Orphan
         Dir.Reexport
         Dir.Unused
         Dir.Reuse

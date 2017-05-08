@@ -30,3 +30,5 @@ data Data
     | Ctor2 String
 
 type Type = Data
+
+data Orphan = Orphan

@@ -22,6 +22,11 @@
   - section:
     - name: library
     - message:
+      - name: Unused import
+      - module:
+        - name: Library1
+        - identifier: Dir.Reuse
+    - message:
       - name: Excessive other-modules entry
       - module: Dir.Unused
     - message:
@@ -49,6 +54,9 @@
           - Type
           - unusedFunction
           - usedFunction2
+      - module:
+        - name: Dir.Orphan
+        - identifier: bob
       - module:
         - name: Dir.Reexport
         - identifier: reexport3

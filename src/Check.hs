@@ -74,7 +74,7 @@ warnUnusedImport S{..} =
     | (CabalSection{..}, (external, internal)) <- sections
     , let mods = Map.fromList $ map ((hiModuleName &&& id) . hi) $ external ++ internal
     , mod <- Map.elems mods
-    , imp <- mapMaybe (flip Map.lookup mods) $ Set.toList $
+    , imp <- mapMaybe (`Map.lookup` mods) $ Set.toList $
         hiImportModule mod `Set.difference`
         (Set.map identModule (hiImportIdent mod) `Set.union` hiImportOrphan mod)
     , Set.null $ hiImportIdent mod `Set.intersection` hiExportIdent imp -- reexporting for someone else

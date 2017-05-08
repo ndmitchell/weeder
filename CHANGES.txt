@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+0.1.3
     #5, document how to install weeder
     #8, detect unused imports, even import Foo()
     #7, don't say modules with only instances are always redundant

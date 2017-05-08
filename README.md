@@ -28,7 +28,7 @@ I recommend fixing the warnings relating to `other-modules` and files not being 
 
 If you want your package to be detected as "weed free", but it has some weeds you know about but don't consider important, you can add a `.weeder.yaml` file adjacent to the `stack.yaml` with a list of exclusions. To generate an initial list of exclusions run `weeder . --yaml > .weeder.yaml`.
 
-You may then with to generalise/simplify the `.weeder.yaml` by removing anything above or below the interesting part. As an example of the [`.weeder.yaml` file from `ghcid`](https://github.com/ndmitchell/ghcid/blob/master/.weeder.yaml):
+You may wish to generalise/simplify the `.weeder.yaml` by removing anything above or below the interesting part. As an example of the [`.weeder.yaml` file from `ghcid`](https://github.com/ndmitchell/ghcid/blob/master/.weeder.yaml):
 
 ```yaml
 - message: Module reused between components

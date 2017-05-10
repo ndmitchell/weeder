@@ -80,13 +80,15 @@ valueToVal = f
     where
         badYaml want x = error $ "Failed to understand Yaml fragment, expected " ++ want ++ ", got:\n" ++ BS.unpack (Yaml.encode x)
 
+        f Null = []
+        f (Object mp) | Map.null mp = []
         f (Array xs) = concatMap f $ V.toList xs
         f (Object mp) | [(k,v)] <- Map.toList mp = return $ case v of
             v | Just (n, rest) <- findName v -> Val (T.unpack k) (T.unpack n) $ f rest
             Array xs | Just xs <- mapM fromString $ V.toList xs -> End (T.unpack k) xs
             String x -> End (T.unpack k) [T.unpack x]
             _ -> badYaml "either a dict with 'name' or a list/single string" $ Object mp
-        f x = badYaml "either a dict or an array" x
+        f x = badYaml "either a singleton dict or an array" x
         fromString (String x) = Just $ T.unpack x
         fromString x = Nothing
 

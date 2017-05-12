@@ -1,5 +1,2 @@
-$VAR=Invoke-WebRequest https://raw.github.com/ndmitchell/neil/master/misc/appveyor.ps1
-$TEMP=New-TemporaryFile
-$FILE=$TEMP.FullName + ".ps1"
-$VAR.Content | Out-File $FILE
-& $FILE weeder $args
+$Script = Invoke-WebRequest 'https://raw.githubusercontent.com/ndmitchell/neil/master/misc/appveyor.ps1'
+Invoke-Command ([Scriptblock]::Create($Script.Content)) -ArgumentList (@('weeder') + $args)

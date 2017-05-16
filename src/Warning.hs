@@ -11,6 +11,7 @@ module Warning(
 
 import Cabal
 import Util
+import Control.Monad.Extra
 import Data.Maybe
 import Data.List.Extra
 import Control.Exception
@@ -85,12 +86,14 @@ valueToVal = f
         f (Array xs) = concatMap f $ V.toList xs
         f (Object mp) | [(k,v)] <- Map.toList mp = return $ case v of
             v | Just (n, rest) <- findName v -> Val (T.unpack k) (T.unpack n) $ f rest
-            Array xs | Just xs <- mapM fromString $ V.toList xs -> End (T.unpack k) xs
+            v | Just xs <- fromStrings v -> End (T.unpack k) xs
             String x -> End (T.unpack k) [T.unpack x]
             _ -> badYaml "either a dict with 'name' or a list/single string" $ Object mp
         f x = badYaml "either a singleton dict or an array" x
-        fromString (String x) = Just $ T.unpack x
-        fromString x = Nothing
+
+        fromStrings (Array xs) = concatMapM fromStrings $ V.toList xs
+        fromStrings (String x) = Just [T.unpack x]
+        fromStrings x = Nothing
 
         findName (Array xs)
             | ([name], rest) <- partition (isJust . fromName) $ V.toList xs

@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+0.1.4
     #9, allow --dist-dir to set the stack dist-dir
     Deal with operators including | in them
     Allow arrays of arrays of strings in the .weeder.yaml

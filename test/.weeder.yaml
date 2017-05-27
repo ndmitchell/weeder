@@ -12,6 +12,11 @@
       - module:
         - Internal
         - Library
+    - message:
+      - name: Weeds exported
+      - module:
+        - name: Internal
+        - identifier: ! '*|*|*|*'
 - package:
   - name: foo
   - section:

@@ -20,6 +20,7 @@ data Cmd = Cmd
     ,cmdJson :: Bool
     ,cmdYaml :: Bool
     ,cmdShowAll :: Bool
+    ,cmdDistDir :: Maybe String
     } deriving (Show, Data, Typeable)
 
 getCmd :: IO Cmd
@@ -40,6 +41,7 @@ mode = cmdArgsMode $ Cmd
     ,cmdJson = nam "json" &= help "Output JSON"
     ,cmdYaml = nam "yaml" &= help "Output YAML"
     ,cmdShowAll = nam "show-all" &= help "Show even ignored warnings"
+    ,cmdDistDir = nam "dist-dir" &= typDir &= help "Stack dist-dir, defaults to 'stack path --dist-dir'"
     } &= explicit &= name "weeder" &= verbosity
     &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017")
     where

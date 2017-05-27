@@ -23,9 +23,11 @@ buildStack file = callProcess "stack" ["build","--stack-yaml=" ++ file,"--test",
 
 -- | Note that in addition to parsing the stack.yaml file it also runs @stack@ to
 --   compute the dist-dir.
-parseStack :: FilePath -> IO Stack
-parseStack file = do
-    stackDistDir <- fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir","--stack-yaml=" ++ file]) ""
+parseStack :: Maybe FilePath -> FilePath -> IO Stack
+parseStack distDir file = do
+    stackDistDir <- case distDir of
+        Nothing -> fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir","--stack-yaml=" ++ file]) ""
+        Just x -> return x
     stackPackages <- f . decodeYaml <$> readCreateProcess (proc "stack" ["query","locals","--stack-yaml=" ++ file]) ""
     return Stack{..}
     where

@@ -33,7 +33,7 @@ weedDirectory :: Cmd -> FilePath -> IO Result
 weedDirectory Cmd{..} dir = do
     file <- do b <- doesDirectoryExist dir; return $ if b then dir </> "stack.yaml" else dir
     when cmdBuild $ buildStack file
-    Stack{..} <- parseStack file
+    Stack{..} <- parseStack cmdDistDir file
     cabals <- forM stackPackages $ \x -> do
         file <- selectCabalFile $ dir </> x
         (file,) <$> parseCabal file

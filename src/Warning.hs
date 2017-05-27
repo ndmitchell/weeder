@@ -107,7 +107,7 @@ showWarningsValue :: [Warning] -> Value
 showWarningsValue = valToValue . f warningLabels . map (dropWhileEnd isNothing . warningPath)
     where
         f (name:names) xs
-            | all (\x -> length x <= 1) xs = [End name $ sort [x | [Just x] <- xs]]
+            | all (\x -> length x <= 1) xs = [End name $ sort [x | [Just x] <- xs] | xs /= []]
             | otherwise = concat
                 [ case a of
                     Nothing -> f names b
@@ -118,7 +118,8 @@ showWarningsJson :: [Warning] -> String
 showWarningsJson = LBS.unpack . JSON.encode . showWarningsValue
 
 showWarningsYaml :: [Warning] -> String
-showWarningsYaml = BS.unpack . Yaml.encode . showWarningsValue
+showWarningsYaml [] = "" -- no need to write anything in the file
+showWarningsYaml xs = BS.unpack $ Yaml.encode $ showWarningsValue xs
 
 
 readWarningsFile :: FilePath -> IO [Warning]

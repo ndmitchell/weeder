@@ -1,8 +1,8 @@
 build: off
-cache:
-- "c:\\sr -> appveyor.yml"
+cache: "c:\\sr -> appveyor.yml"
 
 test_script:
+- set HLINT_ARGUMENTS=src
 - ps: Invoke-Expression (Invoke-WebRequest 'https://raw.githubusercontent.com/ndmitchell/neil/master/appveyor.ps1')
 - stack exec -- weeder .
 - stack exec -- weeder --test

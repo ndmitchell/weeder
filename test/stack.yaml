@@ -1,4 +1,5 @@
 resolver: lts-8.4
 packages: [foo, bar]
 ghc-options:
-  "*": -Werror -fwarn-unused-binds -fwarn-unused-imports
+  bar: -Werror -fwarn-unused-binds -fwarn-unused-imports
+  foo: -Werror -fwarn-unused-binds -fwarn-unused-imports

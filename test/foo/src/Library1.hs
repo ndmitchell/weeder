@@ -5,5 +5,6 @@ import Data.List.Extra
 import Dir.Everything
 import Dir.Reuse()
 import Dir.Used
+import Lexer
 
-exported _ = (chunksOf, used)
+exported _ = (lexer, chunksOf, used)

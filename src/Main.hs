@@ -47,7 +47,7 @@ weedDirectory Cmd{..} dir = do
     res <- forM cabals $ \(cabalFile, Cabal{..}) -> do
         (fileToKey, keyToHi) <- hiParseDirectory $ takeDirectory cabalFile </> stackDistDir
         let full = check (keyToHi Map.!) cabalName $
-                   map (id &&& selectHiFiles fileToKey) cabalSections
+                   map (id &&& selectHiFiles stackDistDir fileToKey) cabalSections
         let warn = if cmdShowAll || cmdMatch then full else ignoreWarnings ignore full
         unless quiet $
             putStrLn $ unlines $ showWarningsPretty cabalName warn

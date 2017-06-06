@@ -27,9 +27,9 @@ selectCabalFile dir = do
         [x] -> return x
         _ -> fail $ "Didn't find exactly 1 cabal file in " ++ dir
 
--- | Return the (exposed Hi files, internal Hi files)
-selectHiFiles :: Map.HashMap FilePath a -> CabalSection -> ([a], [a], [ModuleName])
-selectHiFiles his sect@CabalSection{..} = (external, internal, bad1++bad2)
+-- | Return the (exposed Hi files, internal Hi files, not found)
+selectHiFiles :: FilePath -> Map.HashMap FilePath a -> CabalSection -> ([a], [a], [ModuleName])
+selectHiFiles distDir his sect@CabalSection{..} = (external, internal, bad1++bad2)
     where
         (bad1, external) = partitionEithers $
             [findHi his sect $ Left cabalMainIs | cabalMainIs /= ""] ++
@@ -42,8 +42,10 @@ selectHiFiles his sect@CabalSection{..} = (external, internal, bad1++bad2)
             where
                 mname = either takeFileName id name
                 poss = [ normalise $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
-                    | root <- ["build" </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++ ["build"]
-                    , x <- if null cabalSourceDirs then ["."] else cabalSourceDirs]
+                    | extra <- [".",distDir]
+                    , root <- ["build" </> extra </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++
+                              ["build", "build" </> distDir </> "build"]
+                    , x <- cabalSourceDirs ++ ["."]]
 
 
 data Cabal = Cabal

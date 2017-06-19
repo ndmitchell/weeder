@@ -4,7 +4,7 @@ module Util(
     Str,
     PackageName, ModuleName, IdentName,
     parseHanging,
-    parseHanging2,
+    parseHanging2, unindent2,
     (?:),
     isHaskellSymbol,
     reachable,
@@ -36,7 +36,7 @@ parseHanging :: [String] -> [(String, [String])]
 parseHanging = repeatedly (\(x:xs) -> first (\a -> (x, unindent a)) $ span (maybe True ((== ' ') . fst) . uncons) xs)
 
 parseHanging2 :: [Str] -> [(Str, [Str])]
-parseHanging2 = repeatedly (\(x:xs) -> first (\a -> (x, unindent2 a)) $ span (maybe True ((== ' ') . fst) . S.uncons) xs)
+parseHanging2 = repeatedly (\(x:xs) -> first (\a -> (x, a)) $ span (maybe True ((== ' ') . fst) . S.uncons) xs)
 
 unindent :: [String] -> [String]
 unindent xs = map (drop n) xs

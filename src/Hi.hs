@@ -90,8 +90,8 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
         f (x,xs)
             | Just x <- S.stripPrefix "interface " x = mempty{hiModuleName = parseInterface $ S.toList x}
             | Just x <- S.stripPrefix "exports:" x = mconcat $ map (parseExports . S.toList) $ unindent2 xs
-            | Just x <- S.stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap words $ map S.toList $ x:xs}
-            | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ map S.toList $ x:xs}
+            | Just x <- S.stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap (words . S.toList) $ x:xs}
+            | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "import " x = case unindent2 xs of
                 [] | (pkg, mod) <- breakOn ":" $ words (S.toList x) !! 1 -> mempty
                     {hiImportPackageModule = Set.singleton (takeWhile (/= '@') pkg, drop 1 mod)}
@@ -100,7 +100,7 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1 . S.toList) $ dropWhile ("exports:" `S.isPrefixOf`) xs}
             | S.length x == S.ugly 32, S.all isHexDigit x,
                 (y,ys):_ <- parseHanging2 $ map (S.drop $ S.ugly 2) xs,
-                fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String))) $ map S.toList $ y:ys,
+                fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String)) . S.toList) $ y:ys,
                 not $ "$" `isPrefixOf` fun =
                 mempty{hiSignatures = Map.singleton fun $ Set.fromList $ map parseIdent typ}
             | otherwise = mempty

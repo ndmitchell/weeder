@@ -99,7 +99,7 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
                     {hiImportModule = Set.singleton m
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1 . S.toList) $ dropWhile ("exports:" `S.isPrefixOf`) xs}
             | S.length x == S.ugly 32, S.all isHexDigit x,
-                (y,ys):_ <- parseHanging2 $ unindent2 xs,
+                (y,ys):_ <- parseHanging2 $ map (S.drop $ S.ugly 2) xs,
                 fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String))) $ map S.toList $ y:ys,
                 not $ "$" `isPrefixOf` fun =
                 mempty{hiSignatures = Map.singleton fun $ Set.fromList $ map parseIdent typ}

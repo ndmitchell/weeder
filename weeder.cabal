@@ -38,6 +38,7 @@ executable weeder
         aeson,
         yaml,
         bytestring,
+        foundation >= 0.0.10,
         process >= 1.2.3.0,
         extra
     other-modules:
@@ -48,3 +49,4 @@ executable weeder
         Check
         Warning
         CmdLine
+        Str

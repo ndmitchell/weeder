@@ -18,6 +18,7 @@ import Data.List.Extra
 import Data.Monoid
 import Data.Functor
 import Util
+import qualified Str as S
 import System.IO.Extra
 import Prelude
 
@@ -70,7 +71,7 @@ hiParseDirectory :: FilePath -> IO (Map.HashMap FilePath HiKey, Map.HashMap HiKe
 hiParseDirectory dir = do
     files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
     his <- forM files $ \file -> do
-        src <- readFile' file
+        src <- S.readFileUTF8 file
         return (drop (length dir + 1) file, trimSignatures $ hiParseContents src)
     -- here we try and dedupe any identical Hi modules
     let keys = Map.fromList $ map (second HiKey . swap) his
@@ -83,23 +84,23 @@ trimSignatures :: Hi -> Hi
 trimSignatures hi@Hi{..} = hi{hiSignatures = Map.filterWithKey (\k _ -> k `Set.member` names) hiSignatures}
     where names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
-hiParseContents :: String -> Hi
-hiParseContents = mconcat . map f . parseHanging .  lines
+hiParseContents :: Str -> Hi
+hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
     where
         f (x,xs)
-            | Just x <- stripPrefix "interface " x = mempty{hiModuleName = parseInterface x}
-            | Just x <- stripPrefix "exports:" x = mconcat $ map parseExports xs
-            | Just x <- stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap words $ x:xs}
-            | Just x <- stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ x:xs}
-            | Just x <- stripPrefix "import " x = case xs of
-                [] | (pkg, mod) <- breakOn ":" $ words x !! 1 -> mempty
+            | Just x <- S.stripPrefix "interface " x = mempty{hiModuleName = parseInterface $ S.toList x}
+            | Just x <- S.stripPrefix "exports:" x = mconcat $ map (parseExports . S.toList) xs
+            | Just x <- S.stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap words $ map S.toList $ x:xs}
+            | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap words $ map S.toList $ x:xs}
+            | Just x <- S.stripPrefix "import " x = case xs of
+                [] | (pkg, mod) <- breakOn ":" $ words (S.toList x) !! 1 -> mempty
                     {hiImportPackageModule = Set.singleton (takeWhile (/= '@') pkg, drop 1 mod)}
-                xs -> let m = words x !! 1 in mempty
+                xs -> let m = words (S.toList x) !! 1 in mempty
                     {hiImportModule = Set.singleton m
-                    ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
-            | length x == 32, all isHexDigit x,
-                (y,ys):_ <- parseHanging xs,
-                fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String))) $ y:ys,
+                    ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1 . S.toList) $ dropWhile ("exports:" `S.isPrefixOf`) xs}
+            | S.length x == S.ugly 32, S.all isHexDigit x,
+                (y,ys):_ <- parseHanging2 xs,
+                fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String))) $ map S.toList $ y:ys,
                 not $ "$" `isPrefixOf` fun =
                 mempty{hiSignatures = Map.singleton fun $ Set.fromList $ map parseIdent typ}
             | otherwise = mempty

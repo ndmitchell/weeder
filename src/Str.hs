@@ -3,7 +3,7 @@ module Str(
     Str,
     linesCR, stripPrefix,
     readFileUTF8,
-    S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all,
+    S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all, S.uncons,
     ugly
     ) where
 

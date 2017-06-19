@@ -33,10 +33,10 @@ a ?: b = if a == mempty then b else a
 
 -- | Parse a hanging lines of lines.
 parseHanging :: [String] -> [(String, [String])]
-parseHanging = repeatedly (\(x:xs) -> first (\a -> (x, unindent a)) $ span (\x -> null x || " " `isPrefixOf` x) xs)
+parseHanging = repeatedly (\(x:xs) -> first (\a -> (x, unindent a)) $ span (maybe True ((== ' ') . fst) . uncons) xs)
 
 parseHanging2 :: [Str] -> [(Str, [Str])]
-parseHanging2 = repeatedly (\(x:xs) -> first (\a -> (x, unindent2 a)) $ span (\x -> S.null x || " " `S.isPrefixOf` x) xs)
+parseHanging2 = repeatedly (\(x:xs) -> first (\a -> (x, unindent2 a)) $ span (maybe True ((== ' ') . fst) . S.uncons) xs)
 
 unindent :: [String] -> [String]
 unindent xs = map (drop n) xs

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, RecordWildCards, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric, RecordWildCards, GeneralizedNewtypeDeriving, OverloadedStrings #-}
 
 module Hi(
     HiKey(), Hi(..), Ident(..),
@@ -99,7 +99,7 @@ hiParseContents = mconcat . map f . parseHanging .  lines
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1) $ dropWhile ("exports:" `isPrefixOf`) xs}
             | length x == 32, all isHexDigit x,
                 (y,ys):_ <- parseHanging xs,
-                fun:"::":typ <- concatMap (wordsBy (`elem` ",()[]{} ")) $ y:ys,
+                fun:"::":typ <- concatMap (wordsBy (`elem` (",()[]{} " :: String))) $ y:ys,
                 not $ "$" `isPrefixOf` fun =
                 mempty{hiSignatures = Map.singleton fun $ Set.fromList $ map parseIdent typ}
             | otherwise = mempty
@@ -118,7 +118,7 @@ hiParseContents = mconcat . map f . parseHanging .  lines
             ,hiFieldName = Set.fromList [Ident (identModule y) b | Ident "" b <- ys]
             ,hiSignatures = Map.fromList [(b, Set.singleton y) | Ident _ b <- ys, b /= identName y]
             }
-            where y:ys = map parseIdent $ wordsBy (`elem` "{} ") x
+            where y:ys = map parseIdent $ wordsBy (`elem` ("{} " :: String)) x
 
         -- "Language.Haskell.PPHsMode" -> Ident "Language.Haskell" "PPHsMode"
         parseIdent x

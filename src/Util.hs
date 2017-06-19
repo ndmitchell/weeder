@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs, OverloadedStrings #-}
 
 module Util(
     PackageName, ModuleName, IdentName,
@@ -41,8 +42,8 @@ unindent xs = map (drop n) xs
 --   according to the Haskell report.
 isHaskellSymbol :: Char -> Bool
 isHaskellSymbol x =
-    x `elem` "!#$%&*+./<=>?@\\^|-~" ||
-    (isSymbol x && x `notElem` "\"'_(),;[]`{}")
+    x `elem` ("!#$%&*+./<=>?@\\^|-~" :: String) ||
+    (isSymbol x && x `notElem` ("\"'_(),;[]`{}" :: String))
 
 
 -- | Given a list of mappings, and an initial set, find which items can be reached

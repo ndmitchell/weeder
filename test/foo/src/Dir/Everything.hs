@@ -1,7 +1,10 @@
+{-# LANGUAGE TemplateHaskell #-}
 
 module Dir.Everything(module Data.List.Extra, module Dir.Everything) where
 
 import Data.List.Extra
+import Language.Haskell.TH.Syntax
+import System.Timeout
 
 usedFunction1 = undefined :: (T1 -> T1) -> ()
 usedFunction2 = Other
@@ -32,3 +35,6 @@ data Data
 type Type = Data
 
 data Orphan = Orphan
+
+templateHaskell :: Int
+templateHaskell = $(timeout `seq` lift (1 :: Int))

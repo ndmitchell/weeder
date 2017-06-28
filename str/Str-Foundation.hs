@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 
 module Str(
     Str,
@@ -18,7 +19,8 @@ import Data.Tuple.Extra
 type Str = S.String
 
 stripPrefix :: Str -> Str -> Maybe Str
-stripPrefix pre x = if pre `S.isPrefixOf` x then Just $ S.drop (S.length pre) x else Nothing
+stripPrefix (S.toBytes S.UTF8 -> pre) (S.toBytes S.UTF8 -> x) =
+    if pre `S.isPrefixOf` x then Just $ S.fromBytesUnsafe $ S.drop (S.length pre) x else Nothing
 
 removeR :: Str -> Str
 removeR s | Just (s, c) <- S.unsnoc s, c == '\r' = s

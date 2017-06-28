@@ -79,6 +79,7 @@ warnUnusedImport S{..} =
         (Set.map identModule (hiImportIdent mod) `Set.union` hiImportOrphan mod)
     , Set.null $ hiImportIdent mod `Set.intersection` hiExportIdent imp -- reexporting for someone else
     , Set.null $ Set.map snd (hiImportPackageModule mod) `Set.intersection` Set.map identModule (hiExportIdent imp) -- reexporting for another package
+    , Set.null $ Set.map identModule (Set.filter (isHaskellCtor . identName) $ hiExportIdent imp) `Set.difference` Set.insert (hiModuleName imp) (hiImportModule imp) -- reexport a type for another package, see #15
     ]
 
 warnUnusedExport :: S -> [Warning]

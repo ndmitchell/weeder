@@ -61,7 +61,8 @@ isHaskellSymbol x =
     (isSymbol x && x `notElem` ("\"'_(),;[]`{}" :: String))
 
 isHaskellCtor :: IdentName -> Bool
-isHaskellCtor = maybe False (\(x,_) -> isUpper x || x == ':') . S.uncons
+isHaskellCtor [] = False
+isHaskellCtor (x:xs) = isUpper x || x == ':'
 
 
 -- | Given a list of mappings, and an initial set, find which items can be reached

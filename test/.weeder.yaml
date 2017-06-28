@@ -43,6 +43,7 @@
         - name: Dir.Library2
         - identifier:
           - Dir.CoerceType
+          - Dir.QuasiQuoter
       - module:
         - name: Library1
         - identifier: Dir.Reuse
@@ -66,6 +67,9 @@
       - module:
         - name: Dir.Orphan
         - identifier: bob
+      - module:
+        - name: Dir.QuasiQuoter
+        - identifier: quasi
       - module:
         - name: Dir.Reexport
         - identifier: reexport3

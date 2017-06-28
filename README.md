@@ -66,6 +66,8 @@ Weeder requires the textual `.hi` file for each source file in the project. Stac
 
 ## What about false positives?
 
-Weeder strives to avoid incorrectly warning about something that is required, if you find such an instance please report it on [the issue tracker](https://github.com/ndmitchell/weeder/issues). Unfortunately there are some cases where there are still false positives:
+Weeder strives to avoid incorrectly warning about something that is required, if you find such an instance please report it on [the issue tracker](https://github.com/ndmitchell/weeder/issues). Unfortunately there are some cases where there are still false positives, as GHC doesn't put enough information in the `.hi` files:
 
 **Data.Coerce** If you use `Data.Coerce.coerce` the constructors for the data type must be in scope, but if they aren't used anywhere other than automatically by `coerce` then Weeder will report unused imports. You can ignore such warnings by adding `- message: Unused import` to your `.weeder.yaml` file.
+
+**Declaration QuasiQuotes** If you use a declaration-level quasi-quote then weeder won't see the use of the quoting function, potentially leading to an unused import warning, and marking the quoting function as a weed. The only solution is to ignore the entries with a `.weeder.yaml` file.

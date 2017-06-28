@@ -17,6 +17,7 @@ library
         Dir.Orphan
         Dir.Reexport
         Dir.Unused
+        Dir.TypesOnly
         Dir.Reuse
 
 executable foo

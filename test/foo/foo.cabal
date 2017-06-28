@@ -13,6 +13,8 @@ library
         Dir.Library2
     other-modules:
         Lexer
+        Dir.CoerceType
+        Dir.CoerceValue
         Dir.Everything
         Dir.Orphan
         Dir.Reexport

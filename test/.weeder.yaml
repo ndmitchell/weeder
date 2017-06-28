@@ -27,11 +27,6 @@
   - section:
     - name: library
     - message:
-      - name: Unused import
-      - module:
-        - name: Library1
-        - identifier: Dir.Reuse
-    - message:
       - name: Excessive other-modules entry
       - module: Dir.Unused
     - message:
@@ -42,6 +37,15 @@
       - depends:
         - cmdargs
         - process
+    - message:
+      - name: Unused import
+      - module:
+        - name: Dir.Library2
+        - identifier:
+          - Dir.CoerceType
+      - module:
+        - name: Library1
+        - identifier: Dir.Reuse
     - message:
       - name: Weeds exported
       - module:

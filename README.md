@@ -63,3 +63,9 @@ The arguments inside `@()` are passed to `weeder`, so add new arguments surround
 ## What about Cabal users?
 
 Weeder requires the textual `.hi` file for each source file in the project. Stack generates that already, so it was easy to integrate in to. There's no reason that information couldn't be extracted by either passing flags to Cabal, or converting the `.hi` files afterwards. I welcome patches to do that integration.
+
+## What about false positives?
+
+Weeder strives to avoid incorrectly warning about something that is required, if you find such an instance please report it on [the issue tracker](https://github.com/ndmitchell/weeder/issues). Unfortunately there are some cases where there are still false positives:
+
+**Data.Coerce** If you use `Data.Coerce.coerce` the constructors for the data type must be in scope, but if they aren't used anywhere other than automatically by `coerce` then Weeder will report unused imports. You can ignore such warnings by adding `- message: Unused import` to your `.weeder.yaml` file.

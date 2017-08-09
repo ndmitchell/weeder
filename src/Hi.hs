@@ -79,7 +79,9 @@ hiParseDirectory dir = do
     files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
     his <- forM files $ \file -> do
         let name = drop (length dir + 1) file
-        whenLoud $ putStr $ "Reading hi file " ++ name ++ " ... "
+        whenLoud $ do
+            putStr $ "Reading hi file " ++ name ++ " ... "
+            hFlush stdout
         (time, (len, res)) <- duration $ do
             src <- S.readFileUTF8 file
             len <- evaluate $ S.length src

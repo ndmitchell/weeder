@@ -9,6 +9,7 @@ import Data.List.Extra
 import Data.Functor
 import Data.Tuple.Extra
 import Control.Monad.Extra
+import System.Console.CmdArgs.Verbosity
 import System.Exit
 import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
@@ -41,7 +42,9 @@ weedDirectory Cmd{..} dir = do
     ignore <- do
         let x = takeDirectory file </> ".weeder.yaml"
         b <- doesFileExist x
-        if not b then return [] else readWarningsFile x
+        if not b then return [] else do
+            whenLoud $ putStrLn $ "Reading ignored warnings from " ++ x
+            readWarningsFile x
     let quiet = cmdJson || cmdYaml
 
     res <- forM cabals $ \(cabalFile, Cabal{..}) -> do

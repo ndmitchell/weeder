@@ -7,11 +7,15 @@ module Hi(
 
 import qualified Data.HashSet as Set
 import qualified Data.HashMap.Lazy as Map
+import System.Console.CmdArgs.Verbosity
 import System.FilePath
 import System.Directory.Extra
+import System.Time.Extra
 import GHC.Generics
 import Data.Tuple.Extra
 import Control.Monad
+import Control.Exception
+import Control.DeepSeq
 import Data.Char
 import Data.Hashable
 import Data.List.Extra
@@ -25,6 +29,7 @@ import Prelude
 data Ident = Ident {identModule :: ModuleName, identName :: IdentName}
     deriving (Show,Eq,Ord,Generic)
 instance Hashable Ident
+instance NFData Ident
 
 data Hi = Hi
     {hiModuleName :: ModuleName
@@ -48,6 +53,7 @@ data Hi = Hi
         -- ^ Things that are field names
     } deriving (Show,Eq,Generic)
 instance Hashable Hi
+instance NFData Hi
 
 instance Monoid Hi where
     mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty mempty
@@ -69,10 +75,19 @@ newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)
 
 hiParseDirectory :: FilePath -> IO (Map.HashMap FilePath HiKey, Map.HashMap HiKey Hi)
 hiParseDirectory dir = do
+    whenLoud $ putStrLn $ "Reading hi directory " ++ dir
     files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
     his <- forM files $ \file -> do
-        src <- S.readFileUTF8 file
-        return (drop (length dir + 1) file, trimSignatures $ hiParseContents src)
+        let name = drop (length dir + 1) file
+        whenLoud $ putStr $ "Reading hi file " ++ name ++ " ... "
+        (time, (len, res)) <- duration $ do
+            src <- S.readFileUTF8 file
+            len <- evaluate $ S.length src
+            let res = trimSignatures $ hiParseContents src
+            evaluate $ rnf res
+            return (len, res)
+        whenLoud $ putStrLn $ S.showLength len ++ " bytes in " ++ showDuration time
+        return (name, res)
     -- here we try and dedupe any identical Hi modules
     let keys = Map.fromList $ map (second HiKey . swap) his
     let mp1 = Map.fromList $ map (second (keys Map.!)) his

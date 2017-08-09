@@ -5,7 +5,7 @@ module Str(
     linesCR, stripPrefix,
     readFileUTF8,
     S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all, S.uncons,
-    ugly
+    ugly, showLength
     ) where
 
 import qualified Foundation as S
@@ -17,6 +17,9 @@ import Data.Tuple.Extra
 
 
 type Str = S.String
+
+showLength :: S.CountOf a -> String
+showLength (S.CountOf x) = show x
 
 stripPrefix :: Str -> Str -> Maybe Str
 stripPrefix (S.toBytes S.UTF8 -> pre) (S.toBytes S.UTF8 -> x) =

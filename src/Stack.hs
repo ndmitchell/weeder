@@ -5,7 +5,7 @@ module Stack(Stack(..), findStack, parseStack, buildStack) where
 import Data.Yaml
 import Data.List.Extra
 import Control.Exception
-import System.Directory
+import System.Directory.Extra
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
 import qualified Data.ByteString.Char8 as BS

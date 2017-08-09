@@ -19,6 +19,7 @@ import Data.Hashable
 import Data.List.Extra
 import Data.Tuple.Extra
 import System.Process
+import System.Console.CmdArgs.Verbosity
 import Str(Str)
 import qualified Str as S
 import qualified Data.HashSet as Set
@@ -81,8 +82,12 @@ isPathsModule :: ModuleName -> Bool
 isPathsModule = isPrefixOf "Paths_"
 
 
-cmd :: String -> [String] -> IO ()
-cmd = callProcess
+cmd :: FilePath -> [String] -> IO ()
+cmd exe args = do
+    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+    callProcess exe args
 
-cmdStdout :: String -> [String] -> IO String
-cmdStdout exe args = readCreateProcess (proc exe args) ""
+cmdStdout :: FilePath -> [String] -> IO String
+cmdStdout exe args = do
+    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+    readCreateProcess (proc exe args) ""

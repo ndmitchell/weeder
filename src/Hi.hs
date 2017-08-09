@@ -112,7 +112,7 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
             | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "import " x = case unindent2 xs of
                 [] | (pkg, mod) <- breakOn ":" $ words (S.toList x) !! 1 -> mempty
-                    {hiImportPackageModule = Set.singleton (takeWhile (/= '@') pkg, drop 1 mod)}
+                    {hiImportPackageModule = Set.singleton (parsePackDep pkg, drop 1 mod)}
                 xs -> let m = words (S.toList x) !! 1 in mempty
                     {hiImportModule = Set.singleton m
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1 . S.toList) $ dropWhile ("exports:" `S.isPrefixOf`) xs}
@@ -124,6 +124,7 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
             | otherwise = mempty
 
         -- "old-locale-1.0.0.7@old-locale-1.0.0.7-KGBP1BSKxH5GCm0LnZP04j" -> "old-locale"
+        -- "old-locale-1.0.0.7" -> "old-locale"
         parsePackDep = intercalate "-" . takeWhile (any isAlpha) . wordsBy (== '-') . takeWhile (/= '@')
 
         -- "hlint-1.9.41-IPKy9tGF1918X9VRp9DMhp:HSE.All 8002" -> "HSE.All"

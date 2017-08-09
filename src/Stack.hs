@@ -8,7 +8,7 @@ import Control.Exception
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
 import qualified Data.ByteString.Char8 as BS
-import System.Process
+import Util
 import Data.Functor
 import Prelude
 
@@ -17,12 +17,6 @@ data Stack = Stack
     {stackPackages :: [FilePath]
     ,stackDistDir :: FilePath
     }
-
-cmd :: String -> [String] -> IO ()
-cmd = callProcess
-
-cmdStdout :: String -> [String] -> IO String
-cmdStdout exe args = readCreateProcess (proc exe args) ""
 
 
 buildStack :: FilePath -> IO ()

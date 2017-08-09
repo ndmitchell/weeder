@@ -9,7 +9,8 @@ module Util(
     isHaskellCtor,
     isHaskellSymbol,
     reachable,
-    isPathsModule
+    isPathsModule,
+    cmd, cmdStdout
     ) where
 
 import Data.Char
@@ -17,6 +18,7 @@ import Data.Monoid
 import Data.Hashable
 import Data.List.Extra
 import Data.Tuple.Extra
+import System.Process
 import Str(Str)
 import qualified Str as S
 import qualified Data.HashSet as Set
@@ -77,3 +79,10 @@ reachable follow = f Set.empty
 -- | Is a given module name the specially generated cabal Paths_foo module
 isPathsModule :: ModuleName -> Bool
 isPathsModule = isPrefixOf "Paths_"
+
+
+cmd :: String -> [String] -> IO ()
+cmd = callProcess
+
+cmdStdout :: String -> [String] -> IO String
+cmdStdout exe args = readCreateProcess (proc exe args) ""

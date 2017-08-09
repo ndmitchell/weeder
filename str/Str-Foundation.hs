@@ -4,7 +4,7 @@ module Str(
     linesCR, S.stripPrefix,
     readFileUTF8,
     S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all, S.uncons,
-    ugly
+    ugly, showLength
     ) where
 
 import qualified Foundation as S
@@ -17,6 +17,8 @@ type Str = S.String
 
 linesCR :: Str -> [Str]
 linesCR = S.lines
+
+showLength x = show x
 
 ugly :: S.Integral a => Integer -> a
 ugly = S.fromInteger

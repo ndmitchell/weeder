@@ -90,8 +90,9 @@ hiParseDirectory dir = do
         return (name, res)
     -- here we try and dedupe any identical Hi modules
     let keys = Map.fromList $ map (second HiKey . swap) his
-    let mp1 = Map.fromList $ map (second (keys Map.!)) his
-    let mp2 = Map.fromList $ map swap $ Map.toList keys
+    mp1 <- evaluate $ Map.fromList $ map (second (keys Map.!)) his
+    mp2 <- evaluate $ Map.fromList $ map swap $ Map.toList keys
+    whenLoud $ putStrLn $ "Found " ++ show (Map.size mp1) ++ " files, " ++ show (Map.size mp2) ++ " distinct"
     return (mp1, mp2)
 
 -- note that in some cases we may get more/less internal signatures, so first remove them

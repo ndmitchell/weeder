@@ -25,5 +25,5 @@ library
 
 executable foo
     default-language:   Haskell2010
-    build-depends:      base, foo, process
+    build-depends:      base, foo, process, array
     main-is:            src/Main.hs

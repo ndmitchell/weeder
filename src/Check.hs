@@ -49,7 +49,7 @@ warnRedundantPackageDependency :: S -> [Warning]
 warnRedundantPackageDependency S{..} =
     [ Warning pkg [cabalSectionType] "Redundant build-depends entry" (Just p) Nothing Nothing
     | (CabalSection{..}, (x1,x2)) <- sections
-    , let usedPackages = Set.unions $ map (hiImportPackage . hi) $ x1 ++ x2
+    , let usedPackages = Set.unions $ map (Set.map fst . hiImportPackageModule . hi) $ x1 ++ x2
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages]
 
 

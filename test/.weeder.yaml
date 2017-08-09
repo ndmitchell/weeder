@@ -23,7 +23,9 @@
     - name: exe:foo
     - message:
       - name: Redundant build-depends entry
-      - depends: process
+      - depends:
+        - array
+        - process
   - section:
     - name: library
     - message:

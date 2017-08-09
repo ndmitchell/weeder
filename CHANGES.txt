@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #21, detect dependencies that are only required transitively
     #13, respect the STACK_YAML environment variable
     #20, add verbosity messages in a lot of places
     #15, tone down unused import if exporting a cross-package type

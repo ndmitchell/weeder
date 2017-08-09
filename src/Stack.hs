@@ -18,17 +18,24 @@ data Stack = Stack
     ,stackDistDir :: FilePath
     }
 
+cmd :: String -> [String] -> IO ()
+cmd = callProcess
+
+cmdStdout :: String -> [String] -> IO String
+cmdStdout exe args = readCreateProcess (proc exe args) ""
+
+
 buildStack :: FilePath -> IO ()
-buildStack file = callProcess "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks"]
+buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks"]
 
 -- | Note that in addition to parsing the stack.yaml file it also runs @stack@ to
 --   compute the dist-dir.
 parseStack :: Maybe FilePath -> FilePath -> IO Stack
 parseStack distDir file = do
     stackDistDir <- case distDir of
-        Nothing -> fst . line1 <$> readCreateProcess (proc "stack" ["path","--dist-dir","--stack-yaml=" ++ file]) ""
+        Nothing -> fst . line1 <$> cmdStdout "stack" ["path","--dist-dir","--stack-yaml=" ++ file]
         Just x -> return x
-    stackPackages <- f . decodeYaml <$> readCreateProcess (proc "stack" ["query","locals","--stack-yaml=" ++ file]) ""
+    stackPackages <- f . decodeYaml <$> cmdStdout "stack" ["query","locals","--stack-yaml=" ++ file]
     return Stack{..}
     where
         decodeYaml = either throw id . decodeEither' . BS.pack

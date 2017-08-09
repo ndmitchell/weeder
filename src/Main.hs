@@ -26,13 +26,17 @@ data Result = Good | Bad deriving Eq
 main :: IO ()
 main = do
     cmd@Cmd{..} <- getCmd
-    res <- mapM (weedDirectory cmd) cmdProjects
+    res <- mapM (weedPath cmd) cmdProjects
     when (Bad `elem` res) exitFailure
 
 
-weedDirectory :: Cmd -> FilePath -> IO Result
-weedDirectory Cmd{..} dir = do
-    file <- do b <- doesDirectoryExist dir; return $ if b then dir </> "stack.yaml" else dir
+weedPath :: Cmd -> FilePath -> IO Result
+weedPath Cmd{..} proj = do
+    -- project may either be a directory name, or a stack.yaml file
+    file <- do
+        isDir <- doesDirectoryExist proj
+        if isDir then findStack proj else return proj
+    whenLoud $ putStrLn $ "Running on Stack file " ++ file
     when cmdBuild $ buildStack file
     Stack{..} <- parseStack cmdDistDir file
     cabals <- forM stackPackages $ \x -> do

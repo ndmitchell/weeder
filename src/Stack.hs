@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
-module Stack(Stack(..), parseStack, buildStack) where
+module Stack(Stack(..), findStack, parseStack, buildStack) where
 
 import Data.Yaml
 import Data.List.Extra
 import Control.Exception
+import System.Directory
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
 import qualified Data.ByteString.Char8 as BS
@@ -18,6 +19,9 @@ data Stack = Stack
     ,stackDistDir :: FilePath
     }
 
+findStack :: FilePath -> IO String
+findStack dir = withCurrentDirectory dir $
+    fst . line1 <$> cmdStdout "stack" ["path","--config-location"]
 
 buildStack :: FilePath -> IO ()
 buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks"]

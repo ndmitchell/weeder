@@ -33,6 +33,7 @@ executable weeder
         yaml,
         vector,
         hashable,
+        deepseq,
         filepath,
         cmdargs,
         aeson,

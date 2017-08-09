@@ -36,7 +36,7 @@ weedDirectory Cmd{..} dir = do
     when cmdBuild $ buildStack file
     Stack{..} <- parseStack cmdDistDir file
     cabals <- forM stackPackages $ \x -> do
-        file <- selectCabalFile $ dir </> x
+        file <- selectCabalFile x
         (file,) <$> parseCabal file
 
     ignore <- do

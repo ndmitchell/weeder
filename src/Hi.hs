@@ -128,7 +128,8 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
         parsePackDep = intercalate "-" . takeWhile (any isAlpha) . wordsBy (== '-') . takeWhile (/= '@')
 
         -- "hlint-1.9.41-IPKy9tGF1918X9VRp9DMhp:HSE.All 8002" -> "HSE.All"
-        parseInterface = drop 1 . snd . breakOn ":" . fst . word1
+        -- "HSE.All 8002" -> "HSE.All"
+        parseInterface = takeWhileEnd (/= ':') . fst . word1
 
         -- "Apply.applyHintFile"
         -- "Language.Haskell.PPHsMode{Language.Haskell.PPHsMode caseIndent}

@@ -52,3 +52,4 @@ executable weeder
         Warning
         CmdLine
         Str
+        Paths_weeder

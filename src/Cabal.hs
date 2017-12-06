@@ -12,6 +12,7 @@ import System.Directory.Extra
 import System.FilePath
 import qualified Data.HashMap.Strict as Map
 import Util
+import Data.Char
 import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
@@ -111,14 +112,17 @@ parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
             "benchmark" -> mempty{cabalSections=[parseSection (Benchmark name) xs]}
             _ -> mempty
 
-parseSection typ xs =
-    mempty{cabalSectionType=typ} <>
-    mconcat (map f $ parseHanging xs)
+parseSection typ xs = mempty{cabalSectionType=typ} <> parse xs
     where
-        keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, filter (not . null) $ map trim $ x2:xs)
+        parse = mconcat . map f . parseHanging
+        keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, trimEqual $ filter (not . null) $ x2:xs)
+        trimEqual xs = map (drop n) xs
+            where n = minimum $ 0 : map (length . takeWhile isSpace) xs
         listSplit = concatMap (wordsBy (`elem` " ,"))
 
         f (keyValues -> (k,vs)) = case k of
+            "if" -> parse vs
+            "else" -> parse vs
             "build-depends:" -> mempty{cabalPackages = map (trim . takeWhile (`notElem` "=><")) . splitOn "," $ unwords vs}
             "hs-source-dirs:" -> mempty{cabalSourceDirs=listSplit vs}
             "exposed-modules:" -> mempty{cabalExposedModules=listSplit vs}

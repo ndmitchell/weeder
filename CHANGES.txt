@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    Follow both branches for if/else containing dependencies/modules
 0.1.7, released 2017-08-09
     #21, detect dependencies that are only required transitively
     #13, respect the STACK_YAML environment variable

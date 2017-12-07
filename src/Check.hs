@@ -8,6 +8,7 @@ import Util
 import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
+import System.Info.Extra
 import qualified Data.HashSet as Set
 import qualified Data.HashMap.Strict as Map
 import Warning
@@ -50,7 +51,8 @@ warnRedundantPackageDependency S{..} =
     [ Warning pkg [cabalSectionType] "Redundant build-depends entry" (Just p) Nothing Nothing
     | (CabalSection{..}, (x1,x2)) <- sections
     , let usedPackages = Set.unions $ map (Set.map fst . hiImportPackageModule . hi) $ x1 ++ x2
-    , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages]
+    , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages
+    , p /= if isWindows then "unix" else "Win32"] -- ignore packages that must be conditional on the other platform
 
 
 warnIncorrectOtherModules :: S -> [Warning]

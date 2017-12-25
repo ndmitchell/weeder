@@ -52,7 +52,9 @@ warnRedundantPackageDependency S{..} =
     | (CabalSection{..}, (x1,x2)) <- sections
     , let usedPackages = Set.unions $ map (Set.map fst . hiImportPackageModule . hi) $ x1 ++ x2
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages
-    , p /= if isWindows then "unix" else "Win32"] -- ignore packages that must be conditional on the other platform
+    , p /= if isWindows then "unix" else "Win32" -- ignore packages that must be conditional on the other platform
+    , p /= "semigroups" -- ignore packages that are often conditional
+    ]
 
 
 warnIncorrectOtherModules :: S -> [Warning]

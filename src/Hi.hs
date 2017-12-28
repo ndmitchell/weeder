@@ -19,7 +19,7 @@ import Control.DeepSeq
 import Data.Char
 import Data.Hashable
 import Data.List.Extra
-import Data.Monoid
+import Data.Semigroup
 import Data.Functor
 import Util
 import qualified Str as S
@@ -55,9 +55,8 @@ data Hi = Hi
 instance Hashable Hi
 instance NFData Hi
 
-instance Monoid Hi where
-    mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty mempty
-    mappend x y = Hi
+instance Semigroup Hi where
+    x <> y = Hi
         {hiModuleName = f (?:) hiModuleName
         ,hiImportPackage = f (<>) hiImportPackage
         ,hiExportIdent = f (<>) hiExportIdent
@@ -69,6 +68,10 @@ instance Monoid Hi where
         ,hiFieldName = f (<>) hiFieldName
         }
         where f op sel = sel x `op` sel y
+
+instance Monoid Hi where
+    mempty = Hi mempty mempty mempty mempty mempty mempty mempty mempty mempty
+    mappend = (<>)
 
 -- | Don't expose that we're just using the filename internally
 newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)

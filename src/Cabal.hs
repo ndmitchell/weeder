@@ -17,7 +17,7 @@ import Data.Maybe
 import Data.List.Extra
 import Data.Tuple.Extra
 import Data.Either.Extra
-import Data.Monoid
+import Data.Semigroup
 import Prelude
 
 
@@ -54,9 +54,12 @@ data Cabal = Cabal
     ,cabalSections :: [CabalSection]
     } deriving Show
 
+instance Semigroup Cabal where
+    Cabal x1 x2 <> Cabal y1 y2 = Cabal (x1?:y1) (x2++y2)
+
 instance Monoid Cabal where
     mempty = Cabal "" []
-    mappend (Cabal x1 x2) (Cabal y1 y2) = Cabal (x1?:y1) (x2++y2)
+    mappend = (<>)
 
 data CabalSectionType = Library | Executable String | TestSuite String | Benchmark String
     deriving (Eq,Ord)
@@ -90,11 +93,13 @@ data CabalSection = CabalSection
     ,cabalPackages :: [PackageName]
     } deriving Show
 
-instance Monoid CabalSection where
-    mempty = CabalSection Library "" [] [] [] []
-    mappend (CabalSection x1 x2 x3 x4 x5 x6) (CabalSection y1 y2 y3 y4 y5 y6) =
+instance Semigroup CabalSection where
+    CabalSection x1 x2 x3 x4 x5 x6 <> CabalSection y1 y2 y3 y4 y5 y6 =
         CabalSection x1 (x2?:y2) (x3<>y3) (x4<>y4) (x5<>y5) (x6<>y6)
 
+instance Monoid CabalSection where
+    mempty = CabalSection Library "" [] [] [] []
+    mappend = (<>)
 
 parseCabal :: FilePath -> IO Cabal
 parseCabal = fmap parseTop . readFile'

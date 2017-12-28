@@ -19,6 +19,7 @@ import Data.Hashable
 import Data.List.Extra
 import Data.Tuple.Extra
 import System.Process
+import System.Directory
 import System.Console.CmdArgs.Verbosity
 import Str(Str)
 import qualified Str as S
@@ -83,8 +84,9 @@ isPathsModule = isPrefixOf "Paths_"
 
 
 cmdTrace :: FilePath -> [String] -> IO ()
-cmdTrace exe args =
-    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+cmdTrace exe args = whenLoud $ do
+    dir <- getCurrentDirectory
+    putStrLn $ "Running: " ++ showCommandForUser exe args ++ " (in " ++ dir ++ ")"
 
 cmd :: FilePath -> [String] -> IO ()
 cmd exe args = do

@@ -82,12 +82,16 @@ isPathsModule :: ModuleName -> Bool
 isPathsModule = isPrefixOf "Paths_"
 
 
+cmdTrace :: FilePath -> [String] -> IO ()
+cmdTrace exe args =
+    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+
 cmd :: FilePath -> [String] -> IO ()
 cmd exe args = do
-    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+    cmdTrace exe args
     callProcess exe args
 
 cmdStdout :: FilePath -> [String] -> IO String
 cmdStdout exe args = do
-    whenLoud $ putStrLn $ "Running: " ++ showCommandForUser exe args
+    cmdTrace exe args
     readCreateProcess (proc exe args) ""

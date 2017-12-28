@@ -1,5 +1,4 @@
 resolver: lts-10.1
 packages: [foo, bar]
 ghc-options:
-  bar: -Werror -fwarn-unused-binds -fwarn-unused-imports
-  foo: -Werror -fwarn-unused-binds -fwarn-unused-imports
+  "$locals": -Werror -Wunused-binds -Wunused-imports

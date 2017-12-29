@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #29, deal with case-insensitive FilePath on Windows
 0.1.10, released 2017-12-28
     Make --verbose print out the directory when running commands
     Don't report semigroups as unused on any platforms

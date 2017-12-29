@@ -1,7 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, OverloadedStrings #-}
 
 module Util(
     Str,
+    FilePathEq, filePathEq,
     PackageName, ModuleName, IdentName,
     parseHanging,
     parseHanging2, unindent2,
@@ -19,7 +20,9 @@ import Data.Hashable
 import Data.List.Extra
 import Data.Tuple.Extra
 import System.Process
+import System.FilePath
 import System.Directory
+import System.Info.Extra
 import System.Console.CmdArgs.Verbosity
 import Str(Str)
 import qualified Str as S
@@ -68,6 +71,13 @@ isHaskellCtor :: IdentName -> Bool
 isHaskellCtor [] = False
 isHaskellCtor (x:xs) = isUpper x || x == ':'
 
+-- | Normal 'FilePath' has 'Eq' but it allows non-normalised paths
+--   and on Windows is case-sensitive even when the underlying file system isn't.
+newtype FilePathEq = FilePathEq FilePath
+    deriving (Hashable,Eq,Ord,Show)
+
+filePathEq :: FilePath -> FilePathEq
+filePathEq = FilePathEq . (if isWindows then lower else id) . normalise
 
 -- | Given a list of mappings, and an initial set, find which items can be reached
 reachable :: (Eq k, Hashable k) => (k -> [k]) -> [k] -> Set.HashSet k

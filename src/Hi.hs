@@ -74,9 +74,9 @@ instance Monoid Hi where
     mappend = (<>)
 
 -- | Don't expose that we're just using the filename internally
-newtype HiKey = HiKey FilePath deriving (Eq,Ord,Hashable)
+newtype HiKey = HiKey FilePathEq deriving (Eq,Ord,Hashable)
 
-hiParseDirectory :: FilePath -> IO (Map.HashMap FilePath HiKey, Map.HashMap HiKey Hi)
+hiParseDirectory :: FilePath -> IO (Map.HashMap FilePathEq HiKey, Map.HashMap HiKey Hi)
 hiParseDirectory dir = do
     whenLoud $ putStrLn $ "Reading hi directory " ++ dir
     files <- filter ((==) ".dump-hi" . takeExtension) <$> listFilesRecursive dir
@@ -92,7 +92,7 @@ hiParseDirectory dir = do
             evaluate $ rnf res
             return (len, res)
         whenLoud $ putStrLn $ S.showLength len ++ " bytes in " ++ showDuration time
-        return (name, res)
+        return (filePathEq name, res)
     -- here we try and dedupe any identical Hi modules
     let keys = Map.fromList $ map (second HiKey . swap) his
     mp1 <- evaluate $ Map.fromList $ map (second (keys Map.!)) his

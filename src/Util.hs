@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Util(
     Str,

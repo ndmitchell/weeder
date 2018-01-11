@@ -16,7 +16,7 @@ script:
 deploy:
   provider: releases
   api_key:
-    secure: ""
+    secure: "dutV6WaRhnNPYyMe61/xG2W+OrG1hV3H6pZC6sqpz91ypNnnz+X5i+A4JJUZK9bvpTf9ThL3S3OdMjzuHGkkgO0dgvpjgM8+68RUW8s06TuITI7pOsqIT4T3dl/0hQvxgheCXxAujPMsmpscCPkTfgRnhcggSQmyp2tTra5K39iy9d7xc6azD8LtpRbZWyc4NHDFi2RrKZk16UAJ842E98yNL8JmsJKvm3R/OFvGmqclxQ37mlKsiOvmjNR5gJlfVCBvW4LvJ5ASQd4kgWkFIvw9XUtdpGvI6FsV/A5P25p+LcWRFuDiM6tVqFS3xRTiw4t3n+l/BNFL1pKDLCzU2aw0+cIVKkV5FiE2tYCAWZTb3q+5vS87M37Oi1u6V5ghAhcb7SAYdgH8emzkGC28YIMSUG0xajYXKEuFoILsxYiplf7gNMGrx1xXewf8w41lI1nKLri7s7xgNgwhU1+h8LeyU1PKr5cyb+aQK0d/XtN+gHusv22c6YXNEOOCfgTEWDsM+e3+B0KwjqfhN09LmZSa7ibXLLuXQfvZG4M56Qzh9GhLhjeH5gOftSSiKeIbD3lYTNJCNosnNwLPAAFnNSQvZq3CUu6ZtAf0b9HuijtKlz2X5c1223jkpCQiGAI/FjogSvnxnXzJBULmyB614FUramZTCi2rwJX+T4elbT8="
   file_glob: true
   file:  travis-release/*
   skip_cleanup: true

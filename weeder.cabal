@@ -42,7 +42,7 @@ executable weeder
         aeson,
         yaml,
         bytestring,
-        foundation >= 0.0.10,
+        foundation >= 0.0.13,
         process >= 1.2.3.0,
         extra
     other-modules:

@@ -2,9 +2,9 @@
 
 module Str(
     Str,
-    linesCR, stripPrefix,
+    linesCR,
     readFileUTF8,
-    S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all, S.uncons,
+    S.null, S.isPrefixOf, S.drop, S.span, S.length, S.toList, S.all, S.uncons, S.stripPrefix,
     ugly, showLength
     ) where
 
@@ -20,10 +20,6 @@ type Str = S.String
 
 showLength :: S.CountOf a -> String
 showLength (S.CountOf x) = show x
-
-stripPrefix :: Str -> Str -> Maybe Str
-stripPrefix (S.toBytes S.UTF8 -> pre) (S.toBytes S.UTF8 -> x) =
-    if pre `S.isPrefixOf` x then Just $ S.fromBytesUnsafe $ S.drop (S.length pre) x else Nothing
 
 removeR :: Str -> Str
 removeR s | Just (s, c) <- S.unsnoc s, c == '\r' = s

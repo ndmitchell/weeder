@@ -30,7 +30,7 @@ automatic :: Cmd -> Cmd
 automatic cmd
     | cmdTest cmd = cmd{cmdTest=False,cmdProjects=["test"],cmdBuild=True,cmdMatch=True}
     | null $ cmdProjects cmd = cmd{cmdProjects=["."]}
-    | otherwise = cmd 
+    | otherwise = cmd
 
 mode :: Mode (CmdArgs Cmd)
 mode = cmdArgsMode $ Cmd
@@ -43,6 +43,6 @@ mode = cmdArgsMode $ Cmd
     ,cmdShowAll = nam "show-all" &= help "Show even ignored warnings"
     ,cmdDistDir = nam "dist-dir" &= typDir &= help "Stack dist-dir, defaults to 'stack path --dist-dir'"
     } &= explicit &= name "weeder" &= verbosity
-    &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017")
+    &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017-2018")
     where
         nam xs = def &= explicit &= name xs &= name [head xs]

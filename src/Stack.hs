@@ -21,19 +21,19 @@ data Stack = Stack
 
 findStack :: FilePath -> IO String
 findStack dir = withCurrentDirectory dir $
-    fst . line1 <$> cmdStdout "stack" ["path","--config-location"]
+    fst . line1 <$> cmdStdout "stack" ["path","--config-location","--color=never"]
 
 buildStack :: FilePath -> IO ()
-buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks"]
+buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks","--color=never"]
 
 -- | Note that in addition to parsing the stack.yaml file it also runs @stack@ to
 --   compute the dist-dir.
 parseStack :: Maybe FilePath -> FilePath -> IO Stack
 parseStack distDir file = do
     stackDistDir <- case distDir of
-        Nothing -> fst . line1 <$> cmdStdout "stack" ["path","--dist-dir","--stack-yaml=" ++ file]
+        Nothing -> fst . line1 <$> cmdStdout "stack" ["path","--dist-dir","--stack-yaml=" ++ file,"--color=never"]
         Just x -> return x
-    stackPackages <- f . decodeYaml <$> cmdStdout "stack" ["query","locals","--stack-yaml=" ++ file]
+    stackPackages <- f . decodeYaml <$> cmdStdout "stack" ["query","locals","--stack-yaml=" ++ file,"--color=never"]
     return Stack{..}
     where
         decodeYaml = either throw id . decodeEither' . BS.pack

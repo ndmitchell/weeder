@@ -42,11 +42,18 @@ selectHiFiles distDir his sect@CabalSection{..} = (external, internal, bad1++bad
         findHi his cabal@CabalSection{..} name = maybe (Left mname) Right $ firstJust (`Map.lookup` his) poss
             where
                 mname = either takeFileName id name
-                poss = [ filePathEq $ joinPath (root : x : either (return . dropExtension) (splitOn ".") name) <.> "dump-hi"
-                    | extra <- [".",distDir]
-                    , root <- ["build" </> extra </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName cabalSectionType]] ++
-                              ["build", "build" </> distDir </> "build"]
-                    , x <- cabalSourceDirs ++ ["."]]
+                poss = map filePathEq $ possibleHi distDir cabalSourceDirs cabalSectionType $ either (return . dropExtension) (splitOn ".") name
+
+
+-- | This code is fragile and keeps going wrong, should probably try a less "guess everything"
+--   and a more refined filter and test.
+possibleHi :: FilePath -> [FilePath] -> CabalSectionType -> [String] -> [FilePath]
+possibleHi distDir sourceDirs sectionType components =
+    [ joinPath (root : x : components) <.> "dump-hi"
+    | extra <- [".",distDir]
+    , root <- ["build" </> extra </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName sectionType]] ++
+              ["build", "build" </> distDir </> "build"]
+    , x <- sourceDirs ++ ["."]]
 
 
 data Cabal = Cabal

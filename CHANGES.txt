@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+0.1.13, released 2018-01-17
     #32, find .hi files in more places
     #32, always disable color when running stack
 0.1.12, released 2018-01-16

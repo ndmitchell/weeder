@@ -39,7 +39,9 @@ selectHiFiles distDir his sect@CabalSection{..} = (external, internal, bad1++bad
             [findHi his sect $ Right x | x <- filter (not . isPathsModule) cabalOtherModules]
 
         findHi :: Map.HashMap FilePathEq a -> CabalSection -> Either FilePath ModuleName -> Either ModuleName a
-        findHi his cabal@CabalSection{..} name = maybe (Left mname) Right $ firstJust (`Map.lookup` his) poss
+        findHi his cabal@CabalSection{..} name =
+            -- error $ show (poss, Map.keys his)
+            maybe (Left mname) Right $ firstJust (`Map.lookup` his) poss
             where
                 mname = either takeFileName id name
                 poss = map filePathEq $ possibleHi distDir cabalSourceDirs cabalSectionType $ either (return . dropExtension) (splitOn ".") name
@@ -51,7 +53,9 @@ possibleHi :: FilePath -> [FilePath] -> CabalSectionType -> [String] -> [FilePat
 possibleHi distDir sourceDirs sectionType components =
     [ joinPath (root : x : components) <.> "dump-hi"
     | extra <- [".",distDir]
-    , root <- ["build" </> extra </> x </> (x ++ "-tmp") | Just x <- [cabalSectionTypeName sectionType]] ++
+    , root <- concat [["build" </> extra </> x </> (x ++ "-tmp")
+                      ,"build" </> extra </> x </> (x ++ "-tmp") </> distDir </> "build" </> x </> (x ++ "-tmp")]
+                     | Just x <- [cabalSectionTypeName sectionType]] ++
               ["build", "build" </> distDir </> "build"]
     , x <- sourceDirs ++ ["."]]
 

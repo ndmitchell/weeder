@@ -44,7 +44,7 @@ executable weeder
         bytestring,
         foundation >= 0.0.13,
         process >= 1.2.3.0,
-        extra
+        extra >= 1.6.4
     other-modules:
         Cabal
         Hi

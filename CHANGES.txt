@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #34, support -any for version numbers
 1.0, released 2018-01-22
     #30, bump the version number to 1.0
 0.1.13, released 2018-01-17

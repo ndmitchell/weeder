@@ -135,11 +135,12 @@ parseSection typ xs = mempty{cabalSectionType=typ} <> parse xs
         trimEqual xs = map (drop n) xs
             where n = minimum $ 0 : map (length . takeWhile isSpace) xs
         listSplit = concatMap (wordsBy (`elem` " ,"))
+        parsePackage = dropSuffix "-any" . filter (not . isSpace) . takeWhile (`notElem` "=><")
 
         f (keyValues -> (k,vs)) = case k of
             "if" -> parse vs
             "else" -> parse vs
-            "build-depends:" -> mempty{cabalPackages = map (trim . takeWhile (`notElem` "=><")) . splitOn "," $ unwords vs}
+            "build-depends:" -> mempty{cabalPackages = map parsePackage . splitOn "," $ unwords vs}
             "hs-source-dirs:" -> mempty{cabalSourceDirs=listSplit vs}
             "exposed-modules:" -> mempty{cabalExposedModules=listSplit vs}
             "other-modules:" -> mempty{cabalOtherModules=listSplit vs}

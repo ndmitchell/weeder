@@ -1,4 +1,4 @@
-resolver: lts-10.1
+resolver: lts-10.6
 packages: [foo, bar, baz]
 ghc-options:
   "$locals": -Werror -Wunused-binds -Wunused-imports -Wno-missing-home-modules

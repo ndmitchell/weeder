@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+1.0.2, released 2018-03-01
     Add lower bounds for Yaml and Aeson
 1.0.1, released 2018-02-23
     #34, support -any for version numbers

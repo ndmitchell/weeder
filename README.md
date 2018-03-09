@@ -26,6 +26,7 @@ Weeder detects dead exports, which can be deleted. To get the most code deleted 
 
 * GHC with `-fwarn-unused-binds -fwarn-unused-imports`, which finds unused definitions and unused imports in a module.
 * [HLint](https://github.com/ndmitchell/hlint#readme), looking for "Redundant extension" hints, which finds unused extensions.
+* [Unused](https://github.com/joshuaclayton/unused), which works at the level of `ctags` information, so can be used if you don't want to use `stack`, can't compile your code, or want to detect unused code between projects.
 
 ## Ignoring weeds
 

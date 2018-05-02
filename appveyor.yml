@@ -4,6 +4,6 @@ cache: "c:\\sr -> appveyor.yml"
 test_script:
 - set HLINT_ARGUMENTS=src
 - ps: Invoke-Expression (Invoke-WebRequest 'https://raw.githubusercontent.com/ndmitchell/neil/master/appveyor.ps1')
-- stack exec -- weeder . --RTS +RTS -K1K
-- stack exec -- weeder --test --RTS +RTS -K1K
+- stack exec -- weeder . +RTS -K1K
+- stack exec -- weeder --test +RTS -K1K
 - ps: Invoke-Command ([Scriptblock]::Create((Invoke-WebRequest 'https://raw.githubusercontent.com/ndmitchell/weeder/master/misc/appveyor.ps1').Content)) -ArgumentList @('--version')

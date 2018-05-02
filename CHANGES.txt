@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #38, make sure you parse bracketed version ranges properly
 1.0.3, released 2018-03-04
     #35, support ^>= operator in Cabal
 1.0.2, released 2018-03-01

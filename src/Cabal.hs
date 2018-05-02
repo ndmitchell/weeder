@@ -135,7 +135,7 @@ parseSection typ xs = mempty{cabalSectionType=typ} <> parse xs
         trimEqual xs = map (drop n) xs
             where n = minimum $ 0 : map (length . takeWhile isSpace) xs
         listSplit = concatMap (wordsBy (`elem` " ,"))
-        parsePackage = dropSuffix "-any" . filter (not . isSpace) . takeWhile (`notElem` "^=><")
+        parsePackage = dropSuffix "-any" . filter (not . isSpace) . takeWhile (`notElem` "^=><(")
 
         f (keyValues -> (k,vs)) = case k of
             "if" -> parse vs

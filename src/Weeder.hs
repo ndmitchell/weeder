@@ -1,5 +1,7 @@
 {-# LANGUAGE TupleSections, RecordWildCards, ScopedTypeVariables #-}
 
+-- | Run the @weeder@ program as a direct dependency.
+--   You are encouraged to use the binary in preference to the library.
 module Weeder(weeder) where
 
 import Hi
@@ -20,6 +22,8 @@ import CmdLine
 import Prelude
 
 
+-- | Given the weeder command line arguments, return the number of warnings that were produced.
+--   If the number is @0@ that corresponds to a successful run.
 weeder :: [String] -> IO Int
 weeder args = do
     cmd@Cmd{..} <- getCmd args

@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+1.0.5, released 2018-05-05
     #39, provide weeder as a library
 1.0.4, released 2018-05-02
     #38, make sure you parse bracketed version ranges properly

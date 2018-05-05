@@ -22,9 +22,9 @@ source-repository head
     type:     git
     location: https://github.com/ndmitchell/weeder.git
 
-executable weeder
+library
+
     default-language:   Haskell2010
-    main-is:            Main.hs
     hs-source-dirs:     src
     if impl(ghc < 8.0)
         build-depends: semigroups >= 0.18
@@ -45,6 +45,8 @@ executable weeder
         foundation >= 0.0.13,
         process >= 1.2.3.0,
         extra >= 1.6.4
+    exposed-modules:
+        Weeder
     other-modules:
         Cabal
         Hi
@@ -55,3 +57,10 @@ executable weeder
         CmdLine
         Str
         Paths_weeder
+
+
+executable weeder
+    default-language:   Haskell2010
+    main-is:            src/Main.hs
+    build-depends:
+        base,weeder

@@ -9,6 +9,7 @@ import System.Console.CmdArgs.Implicit
 import Paths_weeder
 import Data.Version
 import Data.Functor
+import System.Environment
 import Prelude
 
 
@@ -23,8 +24,8 @@ data Cmd = Cmd
     ,cmdDistDir :: Maybe String
     } deriving (Show, Data, Typeable)
 
-getCmd :: IO Cmd
-getCmd = automatic <$> cmdArgsRun mode
+getCmd :: [String] -> IO Cmd
+getCmd args = withArgs args $ automatic <$> cmdArgsRun mode
 
 automatic :: Cmd -> Cmd
 automatic cmd

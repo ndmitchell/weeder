@@ -2,9 +2,10 @@ module Main(main) where
 
 import Weeder
 import System.Exit
+import System.Environment
 import Control.Monad
 
 main :: IO ()
 main = do
-    success <- weeder
-    unless success exitFailure
+    bad <- weeder =<< getArgs
+    when (bad > 0) exitFailure

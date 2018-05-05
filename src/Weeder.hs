@@ -10,7 +10,6 @@ import Data.Functor
 import Data.Tuple.Extra
 import Control.Monad.Extra
 import System.Console.CmdArgs.Verbosity
-import System.Exit
 import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
 import System.Directory.Extra
@@ -21,16 +20,14 @@ import CmdLine
 import Prelude
 
 
-data Result = Good | Bad deriving Eq
-
-weeder :: IO Bool
-weeder = do
-    cmd@Cmd{..} <- getCmd
+weeder :: [String] -> IO Int
+weeder args = do
+    cmd@Cmd{..} <- getCmd args
     res <- mapM (weedPath cmd) cmdProjects
-    return (Bad `elem` res)
+    return $ sum res
 
 
-weedPath :: Cmd -> FilePath -> IO Result
+weedPath :: Cmd -> FilePath -> IO Int
 weedPath Cmd{..} proj = do
     -- project may either be a directory name, or a stack.yaml file
     file <- do
@@ -66,14 +63,14 @@ weedPath Cmd{..} proj = do
     if cmdMatch then
         if sort ignore == sort warns then do
             putStrLn "Warnings match"
-            return Good
+            return 0
         else do
             putStrLn "MISSING WARNINGS"
             putStrLn $ unlines $ showWarningsPretty "" $ ignore \\ warns
             putStrLn "EXTRA WARNINGS"
             putStrLn $ unlines $ showWarningsPretty "" $ warns \\ ignore
-            return Bad
+            return 1
      else do
         when (ignored > 0 && not quiet) $
             putStrLn $ "Ignored " ++ show ignored ++ " weeds (pass --show-all to see them)"
-        return $ if null warns then Good else Bad
+        return $ length warns

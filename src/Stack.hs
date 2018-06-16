@@ -22,18 +22,12 @@ data Stack = Stack
 
 findStack :: FilePath -> IO FilePath
 findStack dir = withCurrentDirectory dir $ do
-    let args = ["path","--config-location","--color=never","--no-install-ghc"]
-    let compute = cmdStdout "stack" args
-
-    let parse = trim . fst . line1
-
-    res <- compute
-    -- rerun if dodgy, since the first time it might be secretly doing a stack setup
-    -- which leaves lots of garbage on the stdout (so just have another go)
-    -- res <- if length (lines res) == 1 then return res else compute
-    when (parse res == "") $
-        fail $ "Failed to find stack.yaml file\nCommand: " ++ unwords ("stack":args) ++ "\nOutput: " ++ res
-    return $ parse res
+    let args = ["path","--config-location","--color=never"]
+    -- it may do a stack setup, so there may be lots of garbage and then the actual info at the end
+    res <- maybe "" (trim . snd) . unsnoc . lines <$> cmdStdout "stack" args
+    when (res == "") $
+        fail $ "Failed to find stack.yaml file\nCommand: " ++ unwords ("stack":args)
+    return res
 
 buildStack :: FilePath -> IO ()
 buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks","--color=never"]

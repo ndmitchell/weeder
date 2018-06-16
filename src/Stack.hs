@@ -5,6 +5,7 @@ module Stack(Stack(..), findStack, parseStack, buildStack) where
 import Data.Yaml
 import Data.List.Extra
 import Control.Exception
+import Control.Monad
 import System.Directory.Extra
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as Map
@@ -19,9 +20,14 @@ data Stack = Stack
     ,stackDistDir :: FilePath
     }
 
-findStack :: FilePath -> IO String
-findStack dir = withCurrentDirectory dir $
-    fst . line1 <$> cmdStdout "stack" ["path","--config-location","--color=never"]
+findStack :: FilePath -> IO FilePath
+findStack dir = withCurrentDirectory dir $ do
+    let args = ["path","--config-location","--color=never"]
+    res <- cmdStdout "stack" args
+    let ans = trim $ fst $ line1 res
+    when (null ans) $
+        fail $ "Failed to find stack.yaml file\nCommand: " ++ unwords ("stack":args) ++ "\nOutput: " ++ res
+    return ans
 
 buildStack :: FilePath -> IO ()
 buildStack file = cmd "stack" ["build","--stack-yaml=" ++ file,"--test","--bench","--no-run-tests","--no-run-benchmarks","--color=never"]

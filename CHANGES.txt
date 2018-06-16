@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    If you fail to find stack.yaml give a better error message
 1.0.5, released 2018-05-05
     #39, provide weeder as a library
 1.0.4, released 2018-05-02

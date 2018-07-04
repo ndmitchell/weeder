@@ -74,3 +74,5 @@ Weeder strives to avoid incorrectly warning about something that is required, if
 **Declaration QuasiQuotes** If you use a declaration-level quasi-quote then weeder won't see the use of the quoting function, potentially leading to an unused import warning, and marking the quoting function as a weed. The only solution is to ignore the entries with a `.weeder.yaml` file.
 
 **Stack extra-deps** Packages marked extra-deps in your `stack.yaml` will be weeded, due to a bug in [`stack`](https://github.com/commercialhaskell/stack/issues/3258). The only solution is to ignore the packages with a `.weeder.yaml` file.
+
+**Linking to C functions** If a library provides C functions, and these are used directly from another library/executable, the library providing these functions may be marked as a redundant `build-depends`, see [more details](https://github.com/ndmitchell/weeder/issues/40).

@@ -43,7 +43,7 @@ mode = cmdArgsMode $ Cmd
     ,cmdYaml = nam "yaml" &= help "Output YAML"
     ,cmdShowAll = nam "show-all" &= help "Show even ignored warnings"
     ,cmdDistDir = nam "dist-dir" &= typDir &= help "Stack dist-dir, defaults to 'stack path --dist-dir'"
-    } &= explicit &= name "weeder" &= verbosity
-    &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017-2018")
+    } &= explicit &= verbosity
+    &= name "weeder" &= program "weeder" &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017-2018")
     where
         nam xs = def &= explicit &= name xs &= name [head xs]

@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #41, Make the --help output clear you can pass a stack.yaml
 1.0.6, released 2018-06-16
     Don't fail with an error if stack setup is necessary
     If you fail to find stack.yaml give a better error message

@@ -35,7 +35,7 @@ automatic cmd
 
 mode :: Mode (CmdArgs Cmd)
 mode = cmdArgsMode $ Cmd
-    {cmdProjects = def &= args &= typ "DIR"
+    {cmdProjects = def &= args &= typ "DIR OR stack.yaml"
     ,cmdBuild = nam "build" &= help "Build the project first"
     ,cmdTest = nam "test" &= help "Run the test suite"
     ,cmdMatch = nam "match" &= help "Make the .weeder.yaml perfectly match"

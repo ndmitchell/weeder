@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    Don't warn on base as it is used by Paths_ modules
     #42, make --verbose print out the version number
     #41, make the --help output clear you can pass a stack.yaml
 1.0.6, released 2018-06-16

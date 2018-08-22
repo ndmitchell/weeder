@@ -54,6 +54,7 @@ warnRedundantPackageDependency S{..} =
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages
     , p /= if isWindows then "unix" else "Win32" -- ignore packages that must be conditional on the other platform
     , p /= "semigroups" -- ignore packages that are often conditional
+    , p /= "base" -- used by Paths_ modules which we have thrown away by this point
     ]
 
 

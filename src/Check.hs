@@ -17,7 +17,7 @@ import Warning
 data S = S
     {pkg :: PackageName
     ,hi :: HiKey -> Hi
-    ,sections :: [(CabalSection, ([HiKey], [HiKey]))]
+    ,sections :: [(CabalSection, ([HiKey], [HiKey], [ModuleName]))]
     }
 
 check :: (HiKey -> Hi) -> PackageName -> [(CabalSection, ([HiKey], [HiKey], [ModuleName]))] -> [Warning]
@@ -30,7 +30,7 @@ check hi pkg sections2 = map (\x -> x{warningSections = sort $ warningSections x
     warnUnusedImport s
     where
         s = S{..}
-        sections = map (second $ \(a,b,c) -> let aa = nubOrd a in (aa,nubOrd b \\ aa)) sections2
+        sections = map (second $ \(a,b,c) -> let aa = nubOrd a in (aa,nubOrd b \\ aa,c)) sections2
 
 
 warnNotCompiled :: PackageName -> [(CabalSection, ([HiKey], [HiKey], [ModuleName]))] -> [Warning]
@@ -42,14 +42,14 @@ warnNotCompiled pkg xs =
 warnReusedModuleBetweenSections :: S -> [Warning]
 warnReusedModuleBetweenSections S{..} =
     [ Warning pkg ss "Module reused between components" Nothing (Just $ hiModuleName $ hi m) Nothing
-    | (m, ss) <- groupSort [(x, cabalSectionType c) | (c, (x1,x2)) <- sections, x <- x1++x2]
+    | (m, ss) <- groupSort [(x, cabalSectionType c) | (c, (x1,x2,_)) <- sections, x <- x1++x2]
     , length ss > 1]
 
 
 warnRedundantPackageDependency :: S -> [Warning]
 warnRedundantPackageDependency S{..} =
     [ Warning pkg [cabalSectionType] "Redundant build-depends entry" (Just p) Nothing Nothing
-    | (CabalSection{..}, (x1,x2)) <- sections
+    | (CabalSection{..}, (x1,x2,_)) <- sections
     , let usedPackages = Set.unions $ map (Set.map fst . hiImportPackageModule . hi) $ x1 ++ x2
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages
     , p /= if isWindows then "unix" else "Win32" -- ignore packages that must be conditional on the other platform
@@ -61,7 +61,7 @@ warnIncorrectOtherModules :: S -> [Warning]
 warnIncorrectOtherModules S{..} = concat
     [ [Warning pkg [cabalSectionType] "Missing other-modules entry" Nothing (Just m) Nothing | m <- Set.toList missing] ++
       [Warning pkg [cabalSectionType] "Excessive other-modules entry" Nothing (Just m) Nothing | m <- Set.toList excessive]
-    | (CabalSection{..}, (external, internal)) <- sections
+    | (CabalSection{..}, (external, internal,_)) <- sections
     , let imports = Map.fromList [(hiModuleName, hiImportModule) | Hi{..} <- map hi $ external ++ internal]
     , let missing =  Set.filter (not . isPathsModule) $
                      Set.unions (Map.elems imports) `Set.difference`
@@ -75,7 +75,7 @@ warnIncorrectOtherModules S{..} = concat
 warnUnusedImport :: S -> [Warning]
 warnUnusedImport S{..} =
     [ Warning pkg [cabalSectionType] "Unused import" Nothing (Just $ hiModuleName mod) (Just $ hiModuleName imp)
-    | (CabalSection{..}, (external, internal)) <- sections
+    | (CabalSection{..}, (external, internal,_)) <- sections
     , let mods = Map.fromList $ map ((hiModuleName &&& id) . hi) $ external ++ internal
     , mod <- Map.elems mods
     , imp <- mapMaybe (`Map.lookup` mods) $ Set.toList $
@@ -95,7 +95,7 @@ warnUnusedExport S{..} =
         -- important: for an identifer to be unused, it must be unused in all sections that use that key
         unused = unionsWith (\(s1,i1) (s2,i2) -> (s1++s2, i1 `Set.intersection` i2))
                  [ Map.fromList [(k, ([cabalSectionType], Set.fromList $ Map.lookupDefault [] (hiModuleName $ hi k) bad)) | k <- internal ++ external]
-                 | (CabalSection{..}, (external, internal)) <- sections
+                 | (CabalSection{..}, (external, internal,_)) <- sections
                  , let bad = Map.fromListWith (++) $ map (identModule &&& return . identName) $ notUsedOrExposed (map hi external) (map hi internal)]
 
 notUsedOrExposed :: [Hi] -> [Hi] -> [Ident]

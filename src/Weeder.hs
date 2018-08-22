@@ -7,6 +7,7 @@ module Weeder(weeder) where
 import Hi
 import Cabal
 import Stack
+import Data.Version
 import Data.List.Extra
 import Data.Functor
 import Data.Tuple.Extra
@@ -16,6 +17,7 @@ import System.IO.Extra
 import qualified Data.HashMap.Strict as Map
 import System.Directory.Extra
 import System.FilePath
+import Paths_weeder
 import Check
 import Warning
 import CmdLine
@@ -27,6 +29,7 @@ import Prelude
 weeder :: [String] -> IO Int
 weeder args = do
     cmd@Cmd{..} <- getCmd args
+    whenLoud $ putStrLn $ "Weeder version " ++ showVersion version
     res <- mapM (weedPath cmd) cmdProjects
     return $ sum res
 

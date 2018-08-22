@@ -26,17 +26,17 @@ check hi pkg sections2 = map (\x -> x{warningSections = sort $ warningSections x
     warnRedundantPackageDependency s ++
     warnIncorrectOtherModules s ++
     warnUnusedExport s ++
-    warnNotCompiled pkg sections2 ++
+    warnNotCompiled s ++
     warnUnusedImport s
     where
         s = S{..}
         sections = map (second $ \(a,b,c) -> let aa = nubOrd a in (aa,nubOrd b \\ aa,c)) sections2
 
 
-warnNotCompiled :: PackageName -> [(CabalSection, ([HiKey], [HiKey], [ModuleName]))] -> [Warning]
-warnNotCompiled pkg xs =
+warnNotCompiled :: S -> [Warning]
+warnNotCompiled S{..} =
     [ Warning pkg [cabalSectionType s] "Module not compiled" Nothing (Just m) Nothing
-    | (s, (_, _, missing)) <- xs, m <- missing]
+    | (s, (_, _, missing)) <- sections, m <- missing]
 
 
 warnReusedModuleBetweenSections :: S -> [Warning]

@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+    #42, make paths case-insensitive on MacOS
 1.0.7, released 2018-08-23
     Don't warn on base as it is used by Paths_ modules
     #42, make --verbose print out the version number

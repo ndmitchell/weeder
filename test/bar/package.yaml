@@ -3,7 +3,7 @@ dependencies: base
 
 library:
     exposed-modules: [Library]
-    other-modules: [Internal]
+    other-modules: [Internal,Bar.Bar]
 
 executables:
     bar:

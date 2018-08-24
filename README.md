@@ -51,7 +51,7 @@ On the CI you should then run `weeder .` (or `weeder . --build` to compile as we
 
 **Travis:** Execute the following command:
 
-    curl -sL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+    curl -sSL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
 
 The arguments after `-s` are passed to `weeder`, so modify the final `.` if you want other arguments.
 

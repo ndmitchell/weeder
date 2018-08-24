@@ -11,8 +11,9 @@ matrix:
   - os: osx
 
 script:
+- curl -sSL https://get.haskellstack.org/ | sh
 - export HLINT_ARGUMENTS=src
-- curl -sL https://raw.github.com/ndmitchell/neil/master/travis.sh | sh
+- curl -sSL https://raw.github.com/ndmitchell/neil/master/travis.sh | sh
 
 deploy:
   provider: releases

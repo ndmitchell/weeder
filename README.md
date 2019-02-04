@@ -47,19 +47,15 @@ This configuration declares that I am not interested in the message about module
 
 Before running Weeder on your continuous integration (CI) server, you should first ensure there are no existing weeds. One way to achieve that is to ignore existing hints by running `weeder . --yaml > .weeder.yaml` and checking in the resulting `.weeder.yaml`.
 
-On the CI you should then run `weeder .` (or `weeder . --build` to compile as well). To avoid the cost of compilation you may wish to fetch the [latest Weeder binary release](https://github.com/ndmitchell/weeder/releases/latest). For certain CI environments there are helper scripts to do that.
+On the CI you should then run `weeder .` (or `weeder . --build` to compile as well). To avoid the cost of compilation you may wish to fetch the [latest Weeder binary release](https://github.com/ndmitchell/weeder/releases/latest).
 
-**Travis:** Execute the following command:
+For the CI systems [Travis](https://travis-ci.org/), [Appveyor](https://www.appveyor.com/) and [Azure Pipelines](https://azure.microsoft.com/en-gb/services/devops/pipelines/) add the line:
 
-    curl -sSL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+```sh
+curl -sSL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+```
 
-The arguments after `-s` are passed to `weeder`, so modify the final `.` if you want other arguments.
-
-**Appveyor:** Add the following statement to `.appveyor.yml`:
-
-    - ps: Invoke-Command ([Scriptblock]::Create((Invoke-WebRequest 'https://raw.githubusercontent.com/ndmitchell/weeder/master/misc/appveyor.ps1').Content)) -ArgumentList @('.')
-
-The arguments inside `@()` are passed to `weeder`, so add new arguments surrounded by `'`, space separated - e.g. `@('.' '--build')`.
+The arguments after `-s` are passed to `weeder`, so modify the final `.` if you want other arguments. This command works on Windows, Mac and Linux.
 
 ## What about Cabal users?
 

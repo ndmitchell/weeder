@@ -44,6 +44,6 @@ mode = cmdArgsMode $ Cmd
     ,cmdShowAll = nam "show-all" &= help "Show even ignored warnings"
     ,cmdDistDir = nam "dist-dir" &= typDir &= help "Stack dist-dir, defaults to 'stack path --dist-dir'"
     } &= explicit &= verbosity
-    &= name "weeder" &= program "weeder" &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017-2018")
+    &= name "weeder" &= program "weeder" &= summary ("Weeder v" ++ showVersion version ++ ", (C) Neil Mitchell 2017-2019")
     where
         nam xs = def &= explicit &= name xs &= name [head xs]

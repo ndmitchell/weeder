@@ -52,7 +52,7 @@ On the CI you should then run `weeder .` (or `weeder . --build` to compile as we
 For the CI systems [Travis](https://travis-ci.org/), [Appveyor](https://www.appveyor.com/) and [Azure Pipelines](https://azure.microsoft.com/en-gb/services/devops/pipelines/) add the line:
 
 ```sh
-curl -sSL https://raw.github.com/ndmitchell/weeder/master/misc/travis.sh | sh -s .
+curl -sSL https://raw.github.com/ndmitchell/weeder/master/misc/run.sh | sh -s .
 ```
 
 The arguments after `-s` are passed to `weeder`, so modify the final `.` if you want other arguments. This command works on Windows, Mac and Linux.

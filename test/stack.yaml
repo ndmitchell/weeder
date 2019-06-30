@@ -3,4 +3,4 @@
 resolver: nightly-2019-06-28
 packages: [foo, bar, baz]
 ghc-options:
-  "$locals": -Werror -Wunused-binds -Wunused-imports -Wno-missing-home-modules -optP-Wno-nonportable-include-path
+  "$locals": -ddump-to-file -ddump-hi -Werror -Wunused-binds -Wunused-imports -Wno-missing-home-modules -optP-Wno-nonportable-include-path

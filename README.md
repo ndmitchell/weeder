@@ -4,6 +4,7 @@ Most projects accumulate code over time. Weeder detects unused Haskell exports, 
 
 * Install `weeder` by running `stack install weeder --resolver=nightly`.
 * Ensure your project has a `stack.yaml` file. If you don't normally build with `stack` then run `stack init` to generate one.
+* Make sure you have `ghc-options: {"$locals": -ddump-to-file -ddump-hi}` in your `stack.yaml`.
 * Run `weeder . --build`, which builds your project with `stack` and reports any weeds.
 
 ## What does Weeder detect?

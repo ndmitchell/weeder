@@ -13,6 +13,7 @@ import System.Directory.Extra
 import System.Time.Extra
 import GHC.Generics
 import Data.Tuple.Extra
+import Data.Maybe
 import Control.Monad
 import Control.Exception
 import Control.DeepSeq

@@ -51,6 +51,7 @@ warnRedundantPackageDependency S{..} =
     [ Warning pkg [cabalSectionType] "Redundant build-depends entry" (Just p) Nothing Nothing
     | (CabalSection{..}, (x1,x2,_)) <- sections
     , let usedPackages = Set.unions $ map (Set.map fst . hiImportPackageModule . hi) $ x1 ++ x2
+    , not $ "" `Set.member` usedPackages -- Sometimes we don't get the package name at all, e.g. https://gitlab.haskell.org/ghc/ghc/issues/16886
     , p <- Set.toList $ Set.fromList cabalPackages `Set.difference` usedPackages
     , p /= if isWindows then "unix" else "Win32" -- ignore packages that must be conditional on the other platform
     , p /= "semigroups" -- ignore packages that are often conditional

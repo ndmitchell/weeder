@@ -114,8 +114,9 @@ hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
             | Just x <- S.stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "import " x = case unindent2 xs of
-                [] | (pkg, mod) <- breakOn ":" $ words (S.toList x) !! 1 -> mempty
-                    {hiImportPackageModule = Set.singleton (parsePackDep pkg, drop 1 mod)}
+                [] | let s = words (S.toList x) !! 1
+                   , (pkg, mod) <- fromMaybe ("", s) $ stripInfix ":" s -> mempty
+                    {hiImportPackageModule = Set.singleton (parsePackDep pkg, mod)}
                 xs -> let m = words (S.toList x) !! 1 in mempty
                     {hiImportModule = Set.singleton m
                     ,hiImportIdent = Set.fromList $ map (Ident m . fst . word1 . S.toList) $ dropWhile ("exports:" `S.isPrefixOf`) xs}

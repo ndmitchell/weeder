@@ -115,7 +115,7 @@ instance Monoid CabalSection where
 parseCabal :: FilePath -> IO Cabal
 parseCabal = fmap parseTop . readFile'
 
-parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
+parseTop = mconcatMap f . parseHanging . filter (not . isComment) . lines
     where
         isComment = isPrefixOf "--" . trimStart
         keyName = (lower *** fst . word1) . word1
@@ -130,7 +130,7 @@ parseTop = mconcat . map f . parseHanging . filter (not . isComment) . lines
 
 parseSection typ xs = mempty{cabalSectionType=typ} <> parse xs
     where
-        parse = mconcat . map f . parseHanging
+        parse = mconcatMap f . parseHanging
         keyValues (x,xs) = let (x1,x2) = word1 x in (lower x1, trimEqual $ filter (not . null) $ x2:xs)
         trimEqual xs = map (drop n) xs
             where n = minimum $ 0 : map (length . takeWhile isSpace) xs
@@ -145,5 +145,5 @@ parseSection typ xs = mempty{cabalSectionType=typ} <> parse xs
             "hs-source-dirs:" -> mempty{cabalSourceDirs=listSplit vs}
             "exposed-modules:" -> mempty{cabalExposedModules=listSplit vs}
             "other-modules:" -> mempty{cabalOtherModules=listSplit vs}
-            "main-is:" -> mempty{cabalMainIs=head $ vs ++ [""]}
+            "main-is:" -> mempty{cabalMainIs=headDef "" vs}
             _ -> mempty

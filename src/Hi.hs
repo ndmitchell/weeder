@@ -107,11 +107,11 @@ trimSignatures hi@Hi{..} = hi{hiSignatures = Map.filterWithKey (\k _ -> k `Set.m
     where names = Set.fromList [s | Ident m s <- Set.toList hiExportIdent, m == hiModuleName]
 
 hiParseContents :: Str -> Hi
-hiParseContents = mconcat . map f . parseHanging2 . S.linesCR
+hiParseContents = mconcatMap f . parseHanging2 . S.linesCR
     where
         f (x,xs)
             | Just x <- S.stripPrefix "interface " x = mempty{hiModuleName = parseInterface $ S.toList x}
-            | Just x <- S.stripPrefix "exports:" x = mconcat $ map (parseExports . S.toList) $ unindent2 xs
+            | Just x <- S.stripPrefix "exports:" x = mconcatMap (parseExports . S.toList) $ unindent2 xs
             | Just x <- S.stripPrefix "orphans:" x = mempty{hiImportOrphan = Set.fromList $ map parseInterface $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "package dependencies:" x = mempty{hiImportPackage = Set.fromList $ map parsePackDep $ concatMap (words . S.toList) $ x:xs}
             | Just x <- S.stripPrefix "import " x = case unindent2 xs of

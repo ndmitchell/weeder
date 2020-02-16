@@ -124,7 +124,7 @@ showWarningsYaml xs = BS.unpack $ Yaml.encode $ showWarningsValue xs
 
 readWarningsFile :: FilePath -> IO [Warning]
 readWarningsFile file = do
-    x <- either throwIO return =<< Yaml.decodeFileEither file
+    x <- eitherM throwIO return $ Yaml.decodeFileEither file
     let res = map warningUnpath $ concatMap (f warningLabels) $ valueToVal x
     mapM_ evaluate res -- ensure exceptions happen immediately
     return res

@@ -54,6 +54,7 @@ possibleHi distDir sourceDirs sectionType components =
     [ joinPath (root : x : components) <.> "dump-hi"
     | extra <- [".",distDir]
     , root <- concat [["build" </> extra </> x </> (x ++ "-tmp")
+                      ,"build" </> extra </> x </> x
                       ,"build" </> extra </> x </> (x ++ "-tmp") </> distDir </> "build" </> x </> (x ++ "-tmp")]
                      | Just x <- [cabalSectionTypeName sectionType]] ++
               ["build", "build" </> distDir </> "build"]
@@ -72,27 +73,29 @@ instance Monoid Cabal where
     mempty = Cabal "" []
     mappend = (<>)
 
-data CabalSectionType = Library | Executable String | TestSuite String | Benchmark String
+data CabalSectionType = Library (Maybe String) | Executable String | TestSuite String | Benchmark String
     deriving (Eq,Ord)
 
 cabalSectionTypeName :: CabalSectionType -> Maybe String
-cabalSectionTypeName Library = Nothing
+cabalSectionTypeName (Library x) = x
 cabalSectionTypeName (Executable x) = Just x
 cabalSectionTypeName (TestSuite x) = Just x
 cabalSectionTypeName (Benchmark x) = Just x
 
 instance Show CabalSectionType where
-    show Library = "library"
+    show (Library Nothing) = "library"
+    show (Library (Just x)) = "library:" ++ x
     show (Executable x) = "exe:" ++ x
     show (TestSuite x) = "test:" ++ x
     show (Benchmark x) = "bench:" ++ x
 
 instance Read CabalSectionType where
-    readsPrec _ "library" = [(Library,"")]
+    readsPrec _ "library" = [(Library Nothing,"")]
     readsPrec _ x
         | Just x <- stripPrefix "exe:" x = [(Executable x, "")]
         | Just x <- stripPrefix "test:" x = [(TestSuite x, "")]
         | Just x <- stripPrefix "bench:" x = [(Benchmark x, "")]
+        | Just x <- stripPrefix "library:" x = [(Library (Just x), "")]
     readsPrec _ _ = []
 
 data CabalSection = CabalSection
@@ -109,7 +112,7 @@ instance Semigroup CabalSection where
         CabalSection x1 (x2?:y2) (x3<>y3) (x4<>y4) (x5<>y5) (x6<>y6)
 
 instance Monoid CabalSection where
-    mempty = CabalSection Library "" [] [] [] []
+    mempty = CabalSection (Library Nothing) "" [] [] [] []
     mappend = (<>)
 
 parseCabal :: FilePath -> IO Cabal
@@ -122,7 +125,9 @@ parseTop = mconcatMap f . parseHanging . filter (not . isComment) . lines
 
         f (keyName -> (key, name), xs) = case key of
             "name:" -> mempty{cabalName=name}
-            "library" -> mempty{cabalSections=[parseSection Library xs]}
+            "library" -> case name of
+                "" -> mempty{cabalSections=[parseSection (Library Nothing) xs]}
+                x -> mempty{cabalSections=[parseSection (Library (Just x)) xs]}
             "executable" -> mempty{cabalSections=[parseSection (Executable name) xs]}
             "test-suite" -> mempty{cabalSections=[parseSection (TestSuite name) xs]}
             "benchmark" -> mempty{cabalSections=[parseSection (Benchmark name) xs]}

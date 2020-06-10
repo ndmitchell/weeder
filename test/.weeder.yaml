@@ -78,8 +78,6 @@
         - name: Dir.Unused
         - identifier: unused
 
-## TODO: These false positives are due to the use of Cabal internal
-## libraries, which are not yet supported by Weeder.
 - package:
   - name: two
   - section:
@@ -88,13 +86,8 @@
       - name: Redundant build-depends entry
       - depends: cli
   - section:
-    - name: library
-    - message:
-      - name: Module not compiled
-      - module: CLI
+    - name: library:cli
     - message:
       - name: Redundant build-depends entry
       - depends:
-        - cmdargs
         - data-default
-        - two

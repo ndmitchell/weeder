@@ -1,5 +1,6 @@
 Changelog for Weeder
 
+1.0.9, released 2020-06-11
     #55, fix handling of internal libraries
 1.0.8, released 2018-08-26
     #42, make paths case-insensitive on MacOS
